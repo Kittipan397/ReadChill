@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - ReadChill</title>
+    <!-- นำเข้า Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- นำเข้าไฟล์ CSS หลัก -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* สไตล์พิเศษเฉพาะหน้าล็อกอิน (โลโก้ Google) */
+        .google-icon {
+            width: 24px;
+            height: 24px;
+        }
+    </style>
+</head>
+<body>
+    <!-- แถบนำทาง (Navbar) แบบง่ายๆ -->
+    <nav>
+        <a href="index.html" class="logo">ReadChill</a>
+    </nav>
+
+    <!-- พื้นที่แสดงแบบฟอร์มล็อกอิน -->
+    <main class="container">
+        <div class="auth-box">
+            <h2>เข้าสู่ระบบ / สมัครสมาชิก</h2>
+            <p style="margin-bottom: 2rem; color: var(--text-secondary);">เข้าสู่ระบบด้วยบัญชี Google เพื่อเริ่มอ่านการ์ตูน</p>
+            
+            <!-- ปุ่ม Sign in with Google -->
+            <button id="google-signin-btn" class="auth-btn-google">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" class="google-icon">
+                เข้าสู่ระบบด้วย Google
+            </button>
+
+            <!-- แสดงข้อความแจ้งเตือน (Error) ถ้ามี -->
+            <p id="auth-error" class="hidden" style="color: var(--danger); margin-top: 1rem;"></p>
+        </div>
+    </main>
+
+    <!-- นำเข้า Script -->
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
+</body>
+</html>

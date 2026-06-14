@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ชำระเงิน - ReadChill</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .payment-box {
+            max-width: 500px;
+            margin: 2rem auto;
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        #qrcode-container {
+            margin: 1.5rem auto;
+            background-color: #fff; /* QR Code ควรมีพื้นหลังสีขาวเพื่อให้สแกนง่าย */
+            padding: 1rem;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        #qrcode-container img {
+            display: block;
+        }
+        .form-group {
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: var(--bg-color);
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+        .upload-btn {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">ReadChill</a>
+        <div class="nav-links">
+            <span id="user-greeting"></span>
+            <button id="logout-btn" class="btn-danger hidden">ออกจากระบบ</button>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div id="loading-spinner" class="loader"></div>
+
+        <div id="payment-content" class="payment-box hidden">
+            <h2>ชำระเงินเพื่อปลดล็อก</h2>
+            <p id="payment-details" style="margin-top: 0.5rem; color: var(--text-secondary);">กำลังโหลดข้อมูล...</p>
+            
+            <div id="qrcode-container">
+                <!-- QR Code จะถูกสร้างและมาแสดงที่นี่ -->
+            </div>
+            
+            <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+                กรุณาสแกน QR Code ด้านบนด้วยแอปพลิเคชันธนาคารเพื่อชำระเงิน<br>
+                บัญชี PromptPay: <strong id="promptpay-id-display">กำลังโหลด...</strong>
+            </p>
+
+            <div class="form-group">
+                <label for="slip-upload">แนบหลักฐานการโอนเงิน (สลิป)</label>
+                <input type="file" id="slip-upload" accept="image/*">
+            </div>
+
+            <button id="submit-payment-btn" class="btn-primary upload-btn">ยืนยันการชำระเงิน</button>
+            <p id="payment-msg" class="hidden" style="margin-top: 1rem;"></p>
+        </div>
+    </main>
+
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/payment.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReadChill - อ่านการ์ตูนชิลๆ</title>
+    <!-- นำเข้า Google Fonts เพื่อความสวยงาม -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- นำเข้าไฟล์ CSS หลัก -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- แถบนำทาง (Navbar) -->
+    <nav>
+        <a href="index.html" class="logo">ReadChill</a>
+        <div class="nav-links">
+            <!-- ส่วนที่แสดงเมื่อยังไม่ได้ล็อกอิน -->
+            <div id="unauth-menu">
+                <a href="login.html" class="btn-primary">เข้าสู่ระบบ</a>
+            </div>
+            <!-- ส่วนที่แสดงเมื่อล็อกอินแล้ว -->
+            <div id="auth-menu" class="hidden">
+                <span id="user-greeting">สวัสดี...</span>
+                <a href="admin.html" id="admin-link" class="hidden">จัดการระบบ (Admin)</a>
+                <button id="logout-btn" class="btn-danger">ออกจากระบบ</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- พื้นที่แสดงเนื้อหาหลัก -->
+    <main class="container">
+        <h1>อัปเดตล่าสุด</h1>
+        <!-- แสดงโหลดดิ้งระหว่างดึงข้อมูล -->
+        <div id="loading-spinner" class="loader"></div>
+        <!-- โครงข่ายสำหรับวางการ์ดการ์ตูน -->
+        <div id="manga-container" class="manga-grid hidden">
+            <!-- การ์ดจะถูกสร้างด้วย Javascript (manga.js) แล้วนำมาใส่ที่นี่ -->
+        </div>
+    </main>
+
+    <!-- นำเข้า Script (ใช้ type="module" เพราะเรียกใช้ import/export แบบ ES6) -->
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/manga.js"></script>
+</body>
+</html>

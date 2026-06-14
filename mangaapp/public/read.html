@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>อ่านการ์ตูน - ReadChill</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* สไตล์สำหรับหน้าอ่านการ์ตูนโดยเฉพาะ */
+        .reader-container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .reader-image {
+            width: 100%;
+            height: auto;
+            display: block; /* ลบช่องว่างใต้ภาพ */
+        }
+        .chapter-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            width: 100%;
+        }
+        .locked-overlay {
+            background-color: var(--card-bg);
+            padding: 3rem;
+            text-align: center;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">ReadChill</a>
+        <div class="nav-links">
+            <div id="unauth-menu"><a href="login.html" class="btn-primary">เข้าสู่ระบบ</a></div>
+            <div id="auth-menu" class="hidden">
+                <span id="user-greeting"></span>
+                <a href="index.html">กลับหน้าแรก</a>
+                <button id="logout-btn" class="btn-danger">ออกจากระบบ</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div id="loading-spinner" class="loader"></div>
+        
+        <!-- ส่วนหัวของตอนที่จะแสดงชื่อตอน -->
+        <div id="chapter-header" class="chapter-header hidden">
+            <h1 id="chapter-title">กำลังโหลด...</h1>
+        </div>
+
+        <!-- บริเวณที่จะนำรูปการ์ตูนมาแสดง -->
+        <div id="reader-container" class="reader-container hidden">
+            <!-- ภาพจะถูกแทรกที่นี่ผ่าน Javascript -->
+        </div>
+
+        <!-- หน้าต่างแจ้งเตือนเมื่อตอนนั้นล็อกอยู่ -->
+        <div id="locked-overlay" class="locked-overlay hidden">
+            <h2>ตอนนี้สงวนสิทธิ์เฉพาะผู้ที่ซื้อแล้ว</h2>
+            <p style="margin: 1rem 0; color: var(--text-secondary);">กรุณาชำระเงินเพื่อปลดล็อกตอนนี้</p>
+            <button id="buy-chapter-btn" class="btn-primary">ซื้อตอน (กำลังโหลดราคา...)</button>
+        </div>
+    </main>
+
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <!-- เราจะเพิ่ม logic หน้าอ่านไว้ในไฟล์แยก หรือรวมใน manga.js ก็ได้ (ในที่นี้เราจะแยกใส่ script ตรงนี้เพื่อความชัดเจน หรืออาจจะสร้างไฟล์ใหม่ แต่ตามแผนเรามี manga.js) -->
+    <!-- ดังนั้นเราจะสร้าง logic สำหรับหน้านี้ไว้ใน manga.js -->
+    <script type="module" src="js/manga.js"></script>
+</body>
+</html>
