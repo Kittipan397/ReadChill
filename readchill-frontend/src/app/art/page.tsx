@@ -31,7 +31,8 @@ export default async function ArtPage({ searchParams }: { searchParams: { page?:
   });
 
   const ITEMS_PER_PAGE = 24;
-  const currentPage = parseInt(searchParams.page || '1');
+  const params = await searchParams;
+  const currentPage = parseInt(params.page || '1');
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const displayMangas = sortedMangas.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   const totalPages = Math.ceil(sortedMangas.length / ITEMS_PER_PAGE);

@@ -12,7 +12,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
-    "public": "mangaapp/public",
+    "source": "readchill-frontend",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -22,10 +22,6 @@
       {
         "source": "/api/verifySlip",
         "function": "verifySlipOK"
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
       }
     ],
     "headers": [
