@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แอดมิน - ReadChill</title>
+    <link rel="stylesheet" href="css/style.css?v=3">
+    <!-- Ionicons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        .admin-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            padding: 2.5rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        .admin-section h2 {
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.3s;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+        .form-group input[type="file"] {
+            padding: 0.5rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1rem;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th {
+            background-color: var(--card-bg);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--card-border);
+        }
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+            background-color: var(--bg-color);
+        }
+        tr:hover td {
+            background-color: var(--card-bg);
+        }
+        .slip-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .slip-link:hover {
+            text-decoration: underline;
+        }
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            margin-right: 0.5rem;
+        }
+    </style>
+
+    <!-- TomSelect CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <style>
+        /* TomSelect Dark Mode Overrides */
+        .ts-wrapper .ts-control { background-color: var(--bg-color) !important; border: 1px solid var(--card-border) !important; color: var(--text-primary) !important; border-radius: 8px !important; padding: 0.8rem !important; }
+        .ts-wrapper.single .ts-control { background-color: var(--bg-color) !important; }
+        .ts-wrapper .ts-dropdown { background-color: var(--card-bg) !important; border: 1px solid var(--card-border) !important; color: var(--text-primary) !important; }
+        .ts-wrapper .ts-dropdown .option { padding: 0.8rem; color: var(--text-primary); }
+        .ts-wrapper .ts-dropdown .option:hover, .ts-wrapper .ts-dropdown .active { background-color: var(--bg-color) !important; color: var(--text-primary) !important; }
+        .ts-wrapper .ts-control input, .ts-wrapper .ts-control .item { color: var(--text-primary) !important; }
+        
+        /* Quill Editor custom styling for dark mode compatibility */
+        .ql-container { font-family: inherit; font-size: 1rem; min-height: 200px; background-color: var(--bg-color); color: var(--text-primary); border: 1px solid var(--card-border) !important; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+        .ql-toolbar { background-color: var(--card-bg); border: 1px solid var(--card-border) !important; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+        .ql-snow .ql-stroke { stroke: var(--text-primary); }
+        .ql-snow .ql-fill, .ql-snow .ql-stroke.ql-fill { fill: var(--text-primary); }
+        .ql-snow .ql-picker { color: var(--text-primary); }
+    </style>
+    <!-- Quill CSS -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/logo.png">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="nav-menu">
+                <a href="index.html" class="logo-link"><span class="logo" style="margin-bottom: 0;">ReadChill <span style="font-size: 1rem; color: var(--danger);">[Admin]</span></span></a>
+                <a href="index.html"><ion-icon name="home-outline"></ion-icon> หน้าแรก</a>
+            </div>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="icon-btn" title="เปลี่ยนธีม"><ion-icon name="sunny-outline"></ion-icon></button>
+                <button id="hamburger-btn" class="icon-btn hamburger-btn" title="เมนู"><ion-icon name="menu-outline"></ion-icon></button>
+                <div id="unauth-menu">
+                    <a href="login.html" class="btn-primary" style="padding: 0.4rem 1.2rem; font-size: 0.9rem;">เข้าสู่ระบบ</a>
+                </div>
+                <div id="auth-menu" class="profile-menu hidden">
+                    <img src="https://ui-avatars.com/api/?name=User&background=1a90ff&color=fff" alt="Profile" id="nav-profile-img" class="profile-img" referrerpolicy="no-referrer">
+                    <span id="user-greeting" class="profile-name">กำลังโหลด...</span>
+                    
+                    <a href="partner.html" id="partner-link" title="แดชบอร์ดนักเขียน" class="hidden"
+                        style="margin-right: 0.5rem; color: var(--text-primary); font-weight: bold; font-size: 0.85rem;"><ion-icon name="pencil" style="font-size: 1.3rem; vertical-align: middle;"></ion-icon></a>
+                    <a href="admin.html" id="admin-link" class="hidden"
+                        style="margin-right: 0.5rem; color: var(--text-primary); font-weight: bold; font-size: 0.85rem;"><ion-icon
+                            name="settings-outline"></ion-icon> จัดการ</a>
+<button id="logout-btn" style="background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.4rem; padding: 0.2rem;" title="ออกจากระบบ"><ion-icon name="log-out-outline"></ion-icon></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container hidden" id="admin-content" style="margin-top: 2rem;">
+        
+        <!-- ส่วนที่ 1: สร้างเรื่องการ์ตูนใหม่ -->
+        <section class="admin-section">
+            <h2><ion-icon name="book"></ion-icon> เพิ่มเรื่องการ์ตูนใหม่ (Manga Series)</h2>
+            <div style="margin-top: 1.5rem; max-width: 600px;">
+                <div class="form-group">
+                    <label>ชื่อเรื่องการ์ตูน</label>
+                    <input type="text" id="add-manga-title" placeholder="เช่น วันพีซ (One Piece)">
+                </div>
+
+                <div class="form-group">
+                    <label>ประเภทของเรื่อง</label>
+                    <select id="add-manga-type">
+                        <option value="manga">มังงะ/การ์ตูน (Manga/Comic)</option>
+                        <option value="novel">นิยาย (Novel)</option>
+                        <option value="manhwa">มันฮวา (Manhwa)</option>
+                        <option value="manhua">มันฮัว (Manhua)</option>
+                        <option value="manthai">การ์ตูนไทย (Manthai)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>เรื่องย่อ (Synopsis)</label>
+                    <textarea id="add-manga-synopsis" placeholder="เล่าเรื่องย่อคร่าวๆ..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>ผู้แต่ง / สตูดิโอ</label>
+                    <input type="text" id="add-manga-author" placeholder="เช่น เออิจิโระ โอดะ">
+                </div>
+                <div class="form-group">
+                    <label>แท็ก / หมวดหมู่ (คั่นด้วยลูกน้ำ ,)</label>
+                    <input type="text" id="add-manga-tags" placeholder="เช่น Action, Fantasy, Shounen">
+                </div>
+                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>จำนวนตอนที่ให้อ่านฟรี</label>
+                        <input type="number" id="add-manga-free-count" placeholder="เช่น 3" >
+                    </div>
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>ราคาต่อตอน (เหรียญ)</label>
+                        <input type="number" id="add-manga-default-price" placeholder="เช่น 5" >
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                        <label>ประเภทความเป็นเจ้าของ</label>
+                        <select id="add-manga-owner-type">
+                            <option value="platform">แพลตฟอร์ม (ซื้อลิขสิทธิ์เอง)</option>
+                            <option value="partner">นักเขียน Partner</option>
+                        </select>
+                    </div>
+                    <div class="form-group hidden" id="add-revenue-share-group" style="flex: 1; margin-bottom: 0;">
+                        <label>ส่วนแบ่งนักเขียน (%)</label>
+                        <input type="number" id="add-manga-revenue-share" placeholder="เช่น 73" value="73" min="0" max="100">
+                    </div>
+                </div>
+                <div class="form-group hidden" id="add-author-id-group">
+                    <label>เลือกนักเขียน Partner</label>
+                    <select id="add-manga-author-id">
+                        <option value="">-- กำลังโหลดรายชื่อนักเขียน --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>อัปโหลดหน้าปกการ์ตูน</label>
+                    <input type="file" id="add-manga-cover" accept="image/*">
+                </div>
+                <button id="add-manga-btn" class="btn-primary" style="width: 100%; margin-top: 1rem;">สร้างเรื่องการ์ตูนใหม่</button>
+                <p id="add-manga-msg" style="margin-top: 1rem; font-weight: 500; text-align: center;"></p>
+            </div>
+        </section>
+
+        <!-- ส่วนที่ 2: เพิ่มตอนใหม่ -->
+        <section class="admin-section">
+            <h2><ion-icon name="cloud-upload"></ion-icon> อัปโหลดตอนใหม่ (Chapter)</h2>
+            <div style="margin-top: 1.5rem; max-width: 600px;">
+                <div class="form-group">
+                    <label>เลือกเรื่องการ์ตูน</label>
+                    <select id="select-manga">
+                        <option value="">-- กำลังโหลดรายชื่อการ์ตูน --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>ลำดับตอน (ตัวเลข)</label>
+                    <input type="number" id="add-chapter-num" placeholder="1000">
+                </div>
+                <div class="form-group">
+                    <label>ประเภท (ฟรี / เสียเงิน)</label>
+                    <select id="add-is-free">
+                        <option value="true">อ่านฟรี</option>
+                        <option value="false">เสียเงิน (ซื้อตอน)</option>
+                    </select>
+                </div>
+                <div class="form-group hidden" id="price-group">
+                    <label>ราคา (เหรียญ)</label>
+                    <input type="number" id="add-price" placeholder="5" >
+                </div>
+                <div class="form-group">
+                    <label>เลือกไฟล์รูปภาพ (หลายไฟล์ได้, ระบบจะเรียงตามชื่อไฟล์)</label>
+                    <input type="file" id="add-images" multiple accept="image/*">
+                </div>
+                <button id="add-chapter-btn" class="btn-primary" style="width: 100%; margin-top: 1rem;">บันทึกตอนใหม่</button>
+                <p id="add-msg" style="margin-top: 1rem; font-weight: 500; text-align: center;"></p>
+            </div>
+        </section>
+
+        <!-- ส่วนที่ 3: จัดการข้อมูลการ์ตูนและตอน -->
+        <section class="admin-section">
+            <h2><ion-icon name="pencil" style="font-size: 1.3rem; vertical-align: middle;"></ion-icon> จัดการข้อมูลการ์ตูนและตอน (Manage)</h2>
+            <div style="margin-top: 1.5rem; max-width: 800px;">
+                <div class="form-group">
+                    <label>เลือกเรื่องการ์ตูนที่ต้องการจัดการ</label>
+                    <select id="manage-manga-select">
+                        <option value="">-- กำลังโหลดรายชื่อการ์ตูน --</option>
+                    </select>
+                </div>
+                
+                <div id="manage-manga-actions" class="hidden" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: center;">
+                    <button id="edit-manga-btn" class="btn-primary" style="background-color: var(--accent-color); flex: 1;"><ion-icon name="create"></ion-icon> แก้ไขข้อมูลเรื่องนี้</button>
+                    <button id="delete-manga-btn" class="btn-primary" style="background-color: var(--danger); flex: 1;"><ion-icon name="trash"></ion-icon> ลบเรื่องนี้ (ลบตอนทั้งหมด)</button>
+                </div>
+
+                <div id="manage-chapters-container" class="hidden">
+                    <h3 style="color: var(--text-primary); margin-bottom: 1rem; border-bottom: 1px solid var(--card-border); padding-bottom: 0.5rem;">รายการตอนทั้งหมด</h3>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ตอนที่</th>
+                                    <th>ประเภท</th>
+                                    <th>ราคา</th>
+                                    <th>จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manage-chapters-tbody">
+                                <!-- Chapter list goes here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ส่วนที่ 4: จัดการรายการชำระเงิน -->
+        <section class="admin-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 style="margin: 0;"><ion-icon name="wallet"></ion-icon> รายการเติมเหรียญที่รออนุมัติ</h2>
+                <div class="combobox-input-wrapper" style="width: 100%; max-width: 300px;">
+                    <ion-icon name="search-outline" class="combobox-icon"></ion-icon>
+                    <input type="text" id="search-payments" class="combobox-input" placeholder="ค้นหา Email หรือยอดเงิน...">
+                </div>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ผู้ใช้ (Email)</th>
+                            <th>ยอดโอน (บาท)</th>
+                            <th>เหรียญที่ได้รับ</th>
+                            <th>สลิป</th>
+                            <th>จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payments-tbody-recent">
+                        <!-- 3 รายการล่าสุด -->
+                    </tbody>
+                </table>
+            </div>
+
+            <details class="history-dropdown" style="margin-top: 1rem;" id="payments-dropdown">
+                <summary style="cursor: pointer; padding: 0.5rem 0; color: var(--text-secondary);">
+                    <h3 style="display: inline; font-size: 1rem;"><ion-icon name="chevron-down-outline" style="vertical-align: middle;"></ion-icon> ดูรายการเพิ่มเติมทั้งหมด</h3>
+                </summary>
+                <div style="overflow-x: auto; margin-top: 0.5rem;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ผู้ใช้ (Email)</th>
+                                <th>ยอดโอน (บาท)</th>
+                                <th>เหรียญที่ได้รับ</th>
+                                <th>สลิป</th>
+                                <th>จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="payments-tbody-older">
+                            <!-- รายการที่เหลือ -->
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+        </section>
+        <!-- ส่วนจัดการผู้ใช้งาน -->
+        <section class="admin-section">
+            <h2><ion-icon name="people"></ion-icon> จัดการผู้ใช้งาน (User Management)</h2>
+            <div style="margin-top: 1.5rem; max-width: 600px;">
+                <div class="form-group" style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="search-user-email" placeholder="ค้นหาด้วยอีเมลผู้ใช้..." style="flex: 1;">
+                    <button id="search-user-btn" class="btn-primary" style="padding: 0.5rem 1rem;">ค้นหา</button>
+                </div>
+                <div id="user-search-result" style="margin-top: 1rem; padding: 1rem; border: 1px solid var(--card-border); border-radius: 8px; display: none;">
+                    <!-- แสดงผลลัพธ์ที่นี่ -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ส่วนคำขอถอนเงิน -->
+        <section class="admin-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 style="margin: 0;"><ion-icon name="cash"></ion-icon> คำขอถอนเงิน (Withdrawal Requests)</h2>
+                <div class="combobox-input-wrapper" style="width: 100%; max-width: 300px;">
+                    <ion-icon name="search-outline" class="combobox-icon"></ion-icon>
+                    <input type="text" id="search-withdrawals" class="combobox-input" placeholder="ค้นหานักเขียน หรือวันที่...">
+                </div>
+            </div>
+            
+            <div class="table-container" style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>วันที่</th>
+                            <th>นักเขียน (Partner)</th>
+                            <th>ยอดเงิน (เหรียญ)</th>
+                            <th>ข้อมูลรับเงิน</th>
+                            <th>สลิปโอนเงิน</th>
+                            <th>การจัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="withdraw-tbody-recent">
+                        <!-- 3 รายการล่าสุด -->
+                    </tbody>
+                </table>
+            </div>
+
+            <details class="history-dropdown" style="margin-top: 1rem;" id="withdrawals-dropdown">
+                <summary style="cursor: pointer; padding: 0.5rem 0; color: var(--text-secondary);">
+                    <h3 style="display: inline; font-size: 1rem;"><ion-icon name="chevron-down-outline" style="vertical-align: middle;"></ion-icon> ดูรายการเพิ่มเติมทั้งหมด</h3>
+                </summary>
+                <div class="table-container" style="overflow-x: auto; margin-top: 0.5rem;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>วันที่</th>
+                                <th>นักเขียน (Partner)</th>
+                                <th>ยอดเงิน (เหรียญ)</th>
+                                <th>ข้อมูลรับเงิน</th>
+                                <th>สลิปโอนเงิน</th>
+                                <th>การจัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="withdraw-tbody-older">
+                            <!-- รายการที่เหลือ -->
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+        </section>
+
+    </main>
+
+    <div id="unauthorized-msg" class="container" style="text-align: center; margin-top: 8rem;">
+        <div class="loader"></div>
+        <h2 style="margin-top: 1rem; color: var(--text-secondary);">กำลังตรวจสอบสิทธิ์ผู้ดูแลระบบ...</h2>
+    </div>
+
+    <!-- Mobile Sidebar -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <div id="mobile-sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-logo">ReadChill</span>
+            <button id="sidebar-close" class="sidebar-close"><ion-icon name="close-outline"></ion-icon></button>
+        </div>
+        <div class="sidebar-profile">
+            <img src="https://ui-avatars.com/api/?name=Guest" id="sidebar-profile-img" alt="Profile" referrerpolicy="no-referrer">
+            <div class="sidebar-profile-info">
+                <h4 id="sidebar-profile-name">ผู้เยี่ยมชม</h4>
+                <p id="sidebar-profile-email">กรุณาเข้าสู่ระบบ</p>
+            </div>
+        </div>
+        <div class="sidebar-menu">
+            <a href="index.html"><ion-icon name="home-outline"></ion-icon> หน้าแรก</a>
+            <a href="search.html"><ion-icon name="search-outline"></ion-icon> ค้นหา</a>
+            <a href="topup.html"><ion-icon name="card-outline"></ion-icon> เติมเหรียญ</a>
+            <a href="library.html"><ion-icon name="library-outline"></ion-icon> คลังของฉัน</a>
+            <a href="request.html"><ion-icon name="chatbubbles-outline"></ion-icon> ติดต่อเรา</a>
+            <div class="sidebar-divider"></div>
+            <a href="login.html" id="sidebar-login-btn"><ion-icon name="log-in-outline"></ion-icon> เข้าสู่ระบบ</a>
+            <a href="partner.html" id="sidebar-partner-link" class="hidden" style="color: var(--text-primary);"><ion-icon name="pencil" style="font-size: 1.3rem; vertical-align: middle;"></ion-icon></a>
+            <a href="admin.html" id="sidebar-admin-link" class="hidden active" style="color: var(--text-primary);"><ion-icon name="settings-outline"></ion-icon> จัดการหลังบ้าน</a>
+            <a href="#" id="sidebar-logout-btn" class="hidden" style="color: var(--danger);"><ion-icon name="log-out-outline"></ion-icon> ออกจากระบบ</a>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <div class="bottom-nav">
+        <a href="index.html" class="bottom-nav-item">
+            <ion-icon name="home-outline"></ion-icon>
+            <span>หน้าแรก</span>
+        </a>
+        <a href="search.html" class="bottom-nav-item">
+            <ion-icon name="search-outline"></ion-icon>
+            <span>ค้นหา</span>
+        </a>
+        <a href="admin.html" class="bottom-nav-item active">
+            <ion-icon name="settings"></ion-icon>
+            <span>จัดการ</span>
+        </a>
+    </div>
+
+    <!-- Edit Manga Modal -->
+    <div id="edit-manga-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <h2 style="color: var(--text-primary); margin-bottom: 1.5rem;">แก้ไขข้อมูลการ์ตูน</h2>
+            <input type="hidden" id="edit-manga-id">
+            
+            <div class="form-group">
+                <label>ประเภทเรื่อง</label>
+                <select id="edit-manga-type">
+                    <option value="manga">มังงะ/การ์ตูน (Manga/Comic)</option>
+                    <option value="novel">นิยาย (Novel)</option>
+                    <option value="manhwa">มันฮวา (Manhwa)</option>
+                    <option value="manhua">มันฮัว (Manhua)</option>
+                    <option value="manthai">การ์ตูนไทย (Manthai)</option>
+                </select>
+            </div>
+<div class="form-group">
+                <label>ชื่อเรื่องการ์ตูน</label>
+                <input type="text" id="edit-manga-title">
+            </div>
+            <div class="form-group">
+                <label>เรื่องย่อ (Synopsis)</label>
+                <textarea id="edit-manga-synopsis"></textarea>
+            </div>
+            <div class="form-group">
+                <label>ผู้แต่ง / สตูดิโอ</label>
+                <input type="text" id="edit-manga-author">
+            </div>
+            <div class="form-group">
+                <label>แท็ก / หมวดหมู่ (คั่นด้วยลูกน้ำ ,)</label>
+                <input type="text" id="edit-manga-tags">
+            </div>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>จำนวนตอนที่ให้อ่านฟรี</label>
+                    <input type="number" id="edit-manga-free-count">
+                </div>
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>ราคาต่อตอน (เหรียญ)</label>
+                    <input type="number" id="edit-manga-default-price">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>อัปโหลดหน้าปกการ์ตูนใหม่ (เว้นว่างไว้ถ้าใช้รูปเดิม)</label>
+                <input type="file" id="edit-manga-cover" accept="image/*">
+            </div>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label>ประเภทความเป็นเจ้าของ</label>
+                    <select id="edit-manga-owner-type">
+                        <option value="platform">แพลตฟอร์ม (ซื้อลิขสิทธิ์เอง)</option>
+                        <option value="partner">นักเขียน Partner</option>
+                    </select>
+                </div>
+                <div class="form-group hidden" id="edit-revenue-share-group" style="flex: 1; margin-bottom: 0;">
+                    <label>ส่วนแบ่งนักเขียน (%)</label>
+                    <input type="number" id="edit-manga-revenue-share" placeholder="73" value="73" min="0" max="100">
+                </div>
+            </div>
+            <div class="form-group hidden" id="edit-author-id-group">
+                <label>เลือกนักเขียน Partner</label>
+                <select id="edit-manga-author-id">
+                    <option value="">-- กำลังโหลดรายชื่อนักเขียน --</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button id="save-manga-edit-btn" class="btn-primary" style="flex: 1;">บันทึกการแก้ไข</button>
+                <button id="cancel-manga-edit-btn" class="btn-primary" style="flex: 1; background-color: var(--card-border); color: var(--text-primary);">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Chapter Modal -->
+    <div id="edit-chapter-modal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto;">
+            <h2 style="color: var(--text-primary); margin-bottom: 1.5rem;">แก้ไขข้อมูลตอนที่ <span id="edit-chapter-display-num"></span></h2>
+            <input type="hidden" id="edit-chapter-id">
+            <div class="form-group">
+                <label>ลำดับตอน (ตัวเลข)</label>
+                <input type="number" id="edit-chapter-num">
+            </div>
+            <div class="form-group">
+                <label>ประเภท (ฟรี / เสียเงิน)</label>
+                <select id="edit-chapter-is-free">
+                    <option value="true">อ่านฟรี</option>
+                    <option value="false">เสียเงิน (ซื้อตอน)</option>
+                </select>
+            </div>
+            <div class="form-group hidden" id="edit-chapter-price-group">
+                <label>ราคา (เหรียญ)</label>
+                <input type="number" id="edit-chapter-price">
+            </div>
+            
+            <div class="form-group" id="edit-chapter-image-container">
+                <label>อัปโหลดไฟล์รูปภาพใหม่ทับของเดิม (เว้นว่างไว้ถ้าใช้รูปเดิม)</label>
+                <input type="file" id="edit-chapter-images" multiple accept="image/*">
+            </div>
+            
+            <div class="form-group hidden" id="edit-chapter-content-container">
+                <label>เนื้อหานิยาย</label>
+                <div id="edit-chapter-editor"></div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button id="save-chapter-edit-btn" class="btn-primary" style="flex: 1; ">บันทึกการแก้ไข</button>
+                <button id="cancel-chapter-edit-btn" class="btn-primary" style="flex: 1; background-color: var(--card-border); color: var(--text-primary);">ยกเลิก</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script type="module" src="js/firebase.js?v=2"></script>
+    <script type="module" src="js/auth.js?v=2"></script>
+    <script type="module" src="js/admin.js?v=9"></script>
+    
+    <!-- Ionicons for Theme Button -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="js/theme.js?v=2"></script>
+    <!-- Quill JS -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <!-- TomSelect JS -->
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+</body>
+</html>

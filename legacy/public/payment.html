@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ชำระเงิน - ReadChill</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .payment-box {
+            max-width: 500px;
+            margin: 2rem auto;
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        #qrcode-container {
+            margin: 1.5rem auto;
+            background-color: #fff; /* QR Code ควรมีพื้นหลังสีขาวเพื่อให้สแกนง่าย */
+            padding: 1rem;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        #qrcode-container img {
+            display: block;
+        }
+        .form-group {
+            text-align: left;
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 0.5rem;
+            background-color: var(--bg-color);
+            border: 1px solid var(--card-border);
+            border-radius: 4px;
+            color: var(--text-primary);
+        }
+        .upload-btn {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+        }
+    </style>
+    <!-- Ionicons for Theme Button -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/logo.png">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="nav-menu">
+                <a href="index.html" class="logo-link"><img src="images/logo.png?v=2" alt="ReadChill" class="logo-img"></a>
+                <a href="index.html"><ion-icon name="home-outline"></ion-icon> หน้าแรก</a>
+            </div>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="icon-btn" title="เปลี่ยนธีม"><ion-icon name="sunny-outline"></ion-icon></button>
+                <button id="hamburger-btn" class="icon-btn hamburger-btn" title="เมนู"><ion-icon name="menu-outline"></ion-icon></button>
+                <div id="unauth-menu">
+                    <a href="login.html" class="btn-primary" style="padding: 0.4rem 1.2rem; font-size: 0.9rem;">เข้าสู่ระบบ</a>
+                </div>
+                <div id="auth-menu" class="profile-menu hidden">
+                    <img src="https://ui-avatars.com/api/?name=User&background=1a90ff&color=fff" alt="Profile" id="nav-profile-img" class="profile-img" referrerpolicy="no-referrer">
+                    <span id="user-greeting" class="profile-name">กำลังโหลด...</span>
+                    
+                    <a href="partner.html" id="partner-link" title="แดชบอร์ดนักเขียน" class="hidden"
+                        style="margin-right: 0.5rem; color: var(--text-primary); font-weight: bold; font-size: 0.85rem;"><ion-icon name="pencil" style="font-size: 1.3rem; vertical-align: middle;"></ion-icon></a>
+                    <a href="admin.html" id="admin-link" class="hidden"
+                        style="margin-right: 0.5rem; color: var(--text-primary); font-weight: bold; font-size: 0.85rem;"><ion-icon
+                            name="settings-outline"></ion-icon> จัดการ</a>
+<button id="logout-btn" style="background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.4rem; padding: 0.2rem;" title="ออกจากระบบ"><ion-icon name="log-out-outline"></ion-icon></button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div id="loading-spinner" class="loader"></div>
+
+        <div id="payment-content" class="payment-box hidden">
+            <h2>ชำระเงินเพื่อปลดล็อก</h2>
+            <p id="payment-details" style="margin-top: 0.5rem; color: var(--text-secondary);">กำลังโหลดข้อมูล...</p>
+            
+            <div id="qrcode-container">
+                <!-- QR Code จะถูกสร้างและมาแสดงที่นี่ -->
+            </div>
+            
+            <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+                กรุณาสแกน QR Code ด้านบนด้วยแอปพลิเคชันธนาคารเพื่อชำระเงิน<br>
+                บัญชี PromptPay: <strong id="promptpay-id-display">กำลังโหลด...</strong>
+            </p>
+
+            <div class="form-group">
+                <label for="slip-upload">แนบหลักฐานการโอนเงิน (สลิป)</label>
+                <input type="file" id="slip-upload" accept="image/*">
+            </div>
+
+            <button id="submit-payment-btn" class="btn-primary upload-btn">ยืนยันการชำระเงิน</button>
+            <p id="payment-msg" class="hidden" style="margin-top: 1rem;"></p>
+        </div>
+    </main>
+
+    <!-- Mobile Sidebar -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    <div id="mobile-sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <span class="sidebar-logo">ReadChill</span>
+            <button id="sidebar-close" class="sidebar-close"><ion-icon name="close-outline"></ion-icon></button>
+        </div>
+        <div class="sidebar-profile">
+            <img src="https://ui-avatars.com/api/?name=Guest" id="sidebar-profile-img" alt="Profile" referrerpolicy="no-referrer">
+            <div class="sidebar-profile-info">
+                <h4 id="sidebar-profile-name">ผู้เยี่ยมชม</h4>
+                <p id="sidebar-profile-email">กรุณาเข้าสู่ระบบ</p>
+            </div>
+        </div>
+        <div class="sidebar-menu">
+            <a href="index.html"><ion-icon name="home-outline"></ion-icon> หน้าแรก</a>
+            <a href="search.html"><ion-icon name="search-outline"></ion-icon> ค้นหา</a>
+            <a href="topup.html"><ion-icon name="card-outline"></ion-icon> เติมเหรียญ</a>
+            <a href="library.html"><ion-icon name="library-outline"></ion-icon> คลังของฉัน</a>
+            <a href="request.html"><ion-icon name="chatbubbles-outline"></ion-icon> ติดต่อเรา</a>
+            <div class="sidebar-divider"></div>
+            <a href="login.html" id="sidebar-login-btn"><ion-icon name="log-in-outline"></ion-icon> เข้าสู่ระบบ</a>
+            <a href="partner.html" id="sidebar-partner-link" class="hidden" style="color: var(--text-primary);"><ion-icon name="pencil" style="font-size: 1.3rem; vertical-align: middle;"></ion-icon></a>
+            <a href="admin.html" id="sidebar-admin-link" class="hidden" style="color: var(--text-primary);"><ion-icon name="settings-outline"></ion-icon> จัดการหลังบ้าน</a>
+            <a href="#" id="sidebar-logout-btn" class="hidden" style="color: var(--danger);"><ion-icon name="log-out-outline"></ion-icon> ออกจากระบบ</a>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation (Mobile) -->
+    <div class="bottom-nav">
+        <a href="index.html" class="bottom-nav-item">
+            <ion-icon name="home-outline"></ion-icon>
+            <span>หน้าแรก</span>
+        </a>
+        <a href="search.html" class="bottom-nav-item">
+            <ion-icon name="search-outline"></ion-icon>
+            <span>ค้นหา</span>
+        </a>
+        <a href="library.html" class="bottom-nav-item">
+            <ion-icon name="library-outline"></ion-icon>
+            <span>คลังของฉัน</span>
+        </a>
+    </div>
+
+    <script type="module" src="js/firebase.js?v=2"></script>
+    <script type="module" src="js/auth.js?v=3"></script>
+    <script type="module" src="js/payment.js"></script>
+    <script src="js/theme.js?v=2"></script>
+</body>
+</html>

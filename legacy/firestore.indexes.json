@@ -1,0 +1,19 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "manga_comments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "mangaId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

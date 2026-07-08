@@ -1,0 +1,125 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isPartner() {
+      return isSignedIn() && getUserData().role == 'partner';
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (getUserData().role == 'admin' || request.auth.token.email == 'kittipan.g397@gmail.com');
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // users collection
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin() || isPartner();
+      allow create: if isOwner(userId);
+      allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'earnedCoins'])) || isAdmin();
+      allow delete: if isAdmin();
+      
+      match /sessions/{sessionId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+
+    // mangas collection
+    match /mangas/{mangaId} {
+      allow read: if true;
+      allow create: if isPartner() || isAdmin();
+      allow update, delete: if (isPartner() && resource.data.authorId == request.auth.uid) || isAdmin();
+    }
+
+    // chapters collection
+    match /chapters/{chapterId} {
+      allow read: if true;
+      allow create, update, delete: if isPartner() || isAdmin();
+    }
+
+    // transactions collection (topups, purchases)
+    match /transactions/{transactionId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update, delete: if isAdmin();
+    }
+
+    // withdrawal_requests collection
+    match /withdrawal_requests/{requestId} {
+      allow create: if isPartner() && request.resource.data.partnerId == request.auth.uid;
+      allow read: if isAdmin() || (isPartner() && resource.data.partnerId == request.auth.uid);
+      allow update: if isAdmin() || (isPartner() && resource.data.partnerId == request.auth.uid && resource.data.status == 'pending');
+      allow delete: if isAdmin() || (isPartner() && resource.data.partnerId == request.auth.uid && resource.data.status == 'pending');
+    }
+
+    // payments collection (เติมเหรียญ)
+    match /payments/{paymentId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // requests collection (รีเควสการ์ตูน)
+    match /requests/{requestId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // request_comments collection (คอมเมนต์รีเควส)
+    match /request_comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // manga_comments collection (คอมเมนต์การ์ตูน - ระบบใหม่)
+    match /manga_comments/{commentId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+    }
+    
+    // pre_approved_partners collection
+    match /pre_approved_partners/{docId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+    // shop_items collection
+    match /shop_items/{itemId} {
+      allow read: if true;
+      allow create, update, delete: if isPartner() || isAdmin();
+    }
+
+    // shop_sales collection
+    match /shop_sales/{saleId} {
+      allow read: if isAdmin() || (isPartner() && resource.data.partnerId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
+    }
+
+    // user_inventory collection
+    match /user_inventory/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create, update: if isOwner(userId);
+      allow delete: if isAdmin();
+    }
+    
+    // Catch-all: deny anything not explicitly allowed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

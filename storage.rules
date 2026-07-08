@@ -1,0 +1,46 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is signed in
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+
+    // Users can read any image
+    match /covers/{imageId} {
+      allow read: if true;
+      allow write: if isSignedIn() && request.resource.contentType.matches('image/.*');
+    }
+
+    // Chapters images
+    match /chapters/{chapterId}/{imageId} {
+      allow read: if true;
+      allow write: if isSignedIn() && request.resource.contentType.matches('image/.*');
+    }
+
+    // User Profile/Cover Images
+    match /users/{userId}/{imageId} {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.uid == userId && request.resource.contentType.matches('image/.*');
+    }
+
+    // Partner fonts
+    match /fonts/{userId}/{fontId} {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Payment Slips
+    match /slips/{imageId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && request.resource.contentType.matches('image/.*');
+    }
+
+  }
+}
