@@ -368,7 +368,7 @@ export default function MangaDetailPage() {
           </div>
 
           <div className="grid gap-3">
-            {manga.chapters.map((chapter) => (
+            {manga.chapters.map((chapter: Chapter) => (
               <button 
                 key={chapter.id} 
                 onClick={() => handleChapterClick(chapter)}

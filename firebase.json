@@ -1,7 +1,4 @@
 {
-  "functions": {
-    "source": "mangaapp/functions"
-  },
   "storage": {
     "rules": "storage.rules"
   },
@@ -18,12 +15,7 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "rewrites": [
-      {
-        "source": "/api/verifySlip",
-        "function": "verifySlipOK"
-      }
-    ],
+
     "headers": [
       {
         "source": "**/*.@(html|css|js)",

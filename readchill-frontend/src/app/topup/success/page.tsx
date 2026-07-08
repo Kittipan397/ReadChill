@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle, Home, Coins } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
-export default function TopupSuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const { t } = useLanguage();
@@ -54,6 +54,15 @@ export default function TopupSuccessPage() {
           </p>
         )}
       </div>
+  );
+}
+
+export default function TopupSuccessPage() {
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex items-center justify-center p-4">
+      <Suspense fallback={<div className="w-12 h-12 border-4 border-t-blue-500 rounded-full animate-spin mx-auto"></div>}>
+        <SuccessContent />
+      </Suspense>
     </div>
   );
 }
