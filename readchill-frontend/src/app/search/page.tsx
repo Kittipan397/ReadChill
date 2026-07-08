@@ -42,7 +42,7 @@ export default function SearchPage() {
     
     const fetchMangas = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/mangas`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/mangas?limit=500`);
         const result = await res.json();
         if (result.success) {
           setMangas(result.data || []);

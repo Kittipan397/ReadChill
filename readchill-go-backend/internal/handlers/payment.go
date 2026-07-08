@@ -33,7 +33,15 @@ type SlipokResponse struct {
 		TransDate string  `json:"transDate"`
 		TransTime string  `json:"transTime"`
 		Receiver  struct {
-			Name string `json:"name"`
+			Name  string `json:"name"`
+			Proxy struct {
+				Type  string `json:"type"`
+				Value string `json:"value"`
+			} `json:"proxy"`
+			Account struct {
+				Type  string `json:"type"`
+				Value string `json:"value"`
+			} `json:"account"`
 		} `json:"receiver"`
 	} `json:"data"`
 }
@@ -91,10 +99,21 @@ func SubmitSlip(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"success": false, "message": fmt.Sprintf("ยอดเงินในสลิปไม่ถูกต้อง (พบยอด: %.2f บาท, ต้องการ: %d บาท)", slipData.Amount, req.PackageBaht)})
 	}
 
-	// 3. Validate Receiver Name
+	// 3. Validate Receiver Name and Account/Proxy
 	receiverName := strings.ToUpper(slipData.Receiver.Name)
-	if !strings.Contains(receiverName, "กิตติพันธ์") && !strings.Contains(receiverName, "KITTIPAN") && !strings.Contains(receiverName, "SAPMEE") {
-		return c.Status(400).JSON(fiber.Map{"success": false, "message": "ชื่อบัญชีผู้รับไม่ถูกต้อง"})
+	receiverProxy := slipData.Receiver.Proxy.Value
+	receiverAccount := slipData.Receiver.Account.Value
+	
+	allowedProxy := "" // ถ้าไม่มีให้เว้นว่างไว้
+	allowedAccount := "2303193273"
+
+	isProxyMatch := receiverProxy != "" && receiverProxy == allowedProxy
+	isAccountMatch := receiverAccount != "" && receiverAccount == allowedAccount
+	isNameMatch := strings.Contains(receiverName, "กิตติพันธ์") || strings.Contains(receiverName, "KITTIPAN") || strings.Contains(receiverName, "SAPMEE")
+
+	// ในอนาคตแนะนำให้ลบ isNameMatch ออกแล้วเช็คแค่ Proxy หรือ Account เท่านั้น เพื่อป้องกันการปลอมแปลงชื่อ
+	if !isProxyMatch && !isAccountMatch && !isNameMatch {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "ชื่อบัญชีผู้รับโอนหรือหมายเลขบัญชีไม่ถูกต้อง"})
 	}
 
 	// 4. Validate Date
@@ -114,17 +133,18 @@ func SubmitSlip(c *fiber.Ctx) error {
 	}
 
 	parsedTime, errParse := time.ParseInLocation(layout, fmt.Sprintf("%s %s", dateStr, timeStr), loc)
-	if errParse == nil {
-		// Check if slip is older than 30 minutes
-		if time.Since(parsedTime) > 30*time.Minute {
-			return c.Status(400).JSON(fiber.Map{"success": false, "message": "สลิปหมดอายุ (ต้องเป็นสลิปที่โอนภายใน 30 นาที)"})
-		}
-		// Check if slip is in the future (allow 5 mins clock skew)
-		if parsedTime.After(time.Now().In(loc).Add(5 * time.Minute)) {
-			return c.Status(400).JSON(fiber.Map{"success": false, "message": "เวลาในสลิปไม่ถูกต้อง (เกินเวลาปัจจุบัน)"})
-		}
-	} else {
+	if errParse != nil {
 		fmt.Printf("Warning: Could not parse slip time: %s %s - Error: %v\n", dateStr, timeStr, errParse)
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "รูปแบบวันที่และเวลาในสลิปไม่สามารถตรวจสอบได้"})
+	}
+
+	// Check if slip is older than 30 minutes
+	if time.Since(parsedTime) > 30*time.Minute {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "สลิปหมดอายุ (ต้องเป็นสลิปที่โอนภายใน 30 นาที)"})
+	}
+	// Check if slip is in the future (allow 5 mins clock skew)
+	if parsedTime.After(time.Now().In(loc).Add(5 * time.Minute)) {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "เวลาในสลิปไม่ถูกต้อง (เกินเวลาปัจจุบัน)"})
 	}
 
 	transRef := slipData.TransRef
@@ -144,11 +164,11 @@ func SubmitSlip(c *fiber.Ctx) error {
 			return fmt.Errorf("สลิปนี้ถูกใช้งานไปแล้ว ไม่สามารถใช้ซ้ำได้")
 		}
 
-		// Update User Coins
+		// Update User Coins (using Set with MergeAll to avoid error if document doesn't exist)
 		userRef := client.Collection("users").Doc(uid)
-		err = tx.Update(userRef, []firestore.Update{
-			{Path: "coins", Value: firestore.Increment(totalCoins)},
-		})
+		err = tx.Set(userRef, map[string]interface{}{
+			"coins": firestore.Increment(totalCoins),
+		}, firestore.MergeAll)
 		if err != nil {
 			return err
 		}
@@ -195,8 +215,8 @@ func PurchaseChapter(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid request body"})
 	}
 
-	if req.MangaId == "" || req.ChapterId == "" || req.Price <= 0 {
-		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Missing required fields or invalid price"})
+	if req.MangaId == "" || req.ChapterId == "" {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Missing required fields"})
 	}
 
 	client := config.FirestoreClient
@@ -223,6 +243,27 @@ func PurchaseChapter(c *fiber.Ctx) error {
 			}
 		}
 
+		// Fetch real chapter price from Firestore
+		chapterDoc, err := tx.Get(client.Collection("mangas").Doc(req.MangaId).Collection("chapters").Doc(req.ChapterId))
+		if err != nil {
+			return fmt.Errorf("CHAPTER_NOT_FOUND")
+		}
+		
+		chapterCoins, _ := chapterDoc.DataAt("coins")
+		realPrice := int64(0)
+		switch c := chapterCoins.(type) {
+		case int64:
+			realPrice = c
+		case float64:
+			realPrice = int64(c)
+		case int:
+			realPrice = int64(c)
+		}
+
+		if realPrice <= 0 {
+			return fmt.Errorf("INVALID_PRICE") // Free chapters should be handled differently or just return error
+		}
+
 		currentCoins := int64(0)
 		switch c := coins.(type) {
 		case int64:
@@ -231,13 +272,13 @@ func PurchaseChapter(c *fiber.Ctx) error {
 			currentCoins = int64(c)
 		}
 
-		if currentCoins < int64(req.Price) {
+		if currentCoins < realPrice {
 			return fmt.Errorf("INSUFFICIENT_COINS")
 		}
 
 		// Update user coins and unlockedChapters
 		err = tx.Update(userRef, []firestore.Update{
-			{Path: "coins", Value: firestore.Increment(-req.Price)},
+			{Path: "coins", Value: firestore.Increment(-realPrice)},
 			{Path: "unlockedChapters", Value: firestore.ArrayUnion(chapterStr)},
 		})
 		if err != nil {
@@ -250,7 +291,7 @@ func PurchaseChapter(c *fiber.Ctx) error {
 			"userId":    uid,
 			"mangaId":   req.MangaId,
 			"chapterId": req.ChapterId,
-			"price":     req.Price,
+			"price":     realPrice,
 			"createdAt": firestore.ServerTimestamp,
 		})
 	})
@@ -261,6 +302,12 @@ func PurchaseChapter(c *fiber.Ctx) error {
 		}
 		if err.Error() == "INSUFFICIENT_COINS" {
 			return c.Status(400).JSON(fiber.Map{"success": false, "message": "เหรียญไม่เพียงพอ กรุณาเติมเหรียญ"})
+		}
+		if err.Error() == "CHAPTER_NOT_FOUND" {
+			return c.Status(404).JSON(fiber.Map{"success": false, "message": "ไม่พบตอนที่ต้องการซื้อ"})
+		}
+		if err.Error() == "INVALID_PRICE" {
+			return c.Status(400).JSON(fiber.Map{"success": false, "message": "ตอนนี้ไม่สามารถซื้อได้ (ราคาไม่ถูกต้อง)"})
 		}
 		return c.Status(500).JSON(fiber.Map{"success": false, "message": "เกิดข้อผิดพลาดในการซื้อตอน"})
 	}
@@ -378,6 +425,27 @@ func PurchaseShopItem(c *fiber.Ctx) error {
 			return err
 		}
 
+		// Fetch real item price from Firestore
+		itemDoc, err := tx.Get(client.Collection("shop_items").Doc(req.Id))
+		if err != nil {
+			return fmt.Errorf("ITEM_NOT_FOUND")
+		}
+
+		itemPriceVal, _ := itemDoc.DataAt("price")
+		realPrice := int64(0)
+		switch p := itemPriceVal.(type) {
+		case int64:
+			realPrice = p
+		case float64:
+			realPrice = int64(p)
+		case int:
+			realPrice = int64(p)
+		}
+
+		if realPrice < 0 {
+			return fmt.Errorf("INVALID_PRICE")
+		}
+
 		coins, _ := userDoc.DataAt("coins")
 		currentCoins := int64(0)
 		switch co := coins.(type) {
@@ -387,7 +455,7 @@ func PurchaseShopItem(c *fiber.Ctx) error {
 			currentCoins = int64(co)
 		}
 
-		if currentCoins < int64(req.Price) {
+		if currentCoins < realPrice {
 			return fmt.Errorf("INSUFFICIENT_COINS")
 		}
 
@@ -410,9 +478,9 @@ func PurchaseShopItem(c *fiber.Ctx) error {
 		}
 
 		// 3. Deduct coins
-		if req.Price > 0 {
+		if realPrice > 0 {
 			err = tx.Update(userRef, []firestore.Update{
-				{Path: "coins", Value: firestore.Increment(-req.Price)},
+				{Path: "coins", Value: firestore.Increment(-realPrice)},
 			})
 			if err != nil {
 				return err
@@ -443,13 +511,13 @@ func PurchaseShopItem(c *fiber.Ctx) error {
 		}
 
 		// 5. Record sale for partner
-		if req.Price > 0 {
+		if realPrice > 0 {
 			saleRef := client.Collection("shop_sales").NewDoc()
 			return tx.Set(saleRef, map[string]interface{}{
 				"itemId":    req.Id,
 				"partnerId": req.PartnerId,
 				"buyerId":   uid,
-				"price":     req.Price,
+				"price":     realPrice,
 				"type":      req.Type,
 				"createdAt": firestore.ServerTimestamp,
 			})
@@ -463,6 +531,12 @@ func PurchaseShopItem(c *fiber.Ctx) error {
 		}
 		if err.Error() == "ALREADY_OWNED" {
 			return c.Status(400).JSON(fiber.Map{"success": false, "message": "คุณมีสินค้านี้แล้ว"})
+		}
+		if err.Error() == "ITEM_NOT_FOUND" {
+			return c.Status(404).JSON(fiber.Map{"success": false, "message": "ไม่พบสินค้า"})
+		}
+		if err.Error() == "INVALID_PRICE" {
+			return c.Status(400).JSON(fiber.Map{"success": false, "message": "ราคาสินค้าไม่ถูกต้อง"})
 		}
 		return c.Status(500).JSON(fiber.Map{"success": false, "message": "เกิดข้อผิดพลาดในการซื้อสินค้า"})
 	}

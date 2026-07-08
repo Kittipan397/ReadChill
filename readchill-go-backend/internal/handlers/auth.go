@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 
+	"cloud.google.com/go/firestore"
 	"github.com/gofiber/fiber/v2"
 	"github.com/kittipan/readchill-backend/internal/config"
 )
@@ -42,13 +43,24 @@ func GetSavedMangas(c *fiber.Ctx) error {
 	}
 
 	var mangas []map[string]interface{}
-	for _, mangaIdInterface := range savedMangas {
-		if mangaId, ok := mangaIdInterface.(string); ok {
-			mangaDoc, err := client.Collection("mangas").Doc(mangaId).Get(context.Background())
-			if err == nil && mangaDoc.Exists() {
-				data := mangaDoc.Data()
-				data["id"] = mangaDoc.Ref.ID
-				mangas = append(mangas, data)
+	if len(savedMangas) > 0 {
+		var docRefs []*firestore.DocumentRef
+		for _, mangaIdInterface := range savedMangas {
+			if mangaId, ok := mangaIdInterface.(string); ok {
+				docRefs = append(docRefs, client.Collection("mangas").Doc(mangaId))
+			}
+		}
+
+		if len(docRefs) > 0 {
+			docs, err := client.GetAll(context.Background(), docRefs)
+			if err == nil {
+				for _, mangaDoc := range docs {
+					if mangaDoc.Exists() {
+						data := mangaDoc.Data()
+						data["id"] = mangaDoc.Ref.ID
+						mangas = append(mangas, data)
+					}
+				}
 			}
 		}
 	}

@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -11,44 +12,71 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-// GetMangas returns all mangas ordered by views desc
+// GetMangas returns mangas with pagination and type filtering
 func GetMangas(c *fiber.Ctx) error {
-	cacheKey := "mangas_all"
+	mangaType := c.Query("type", "")
+	page := c.QueryInt("page", 1)
+	limit := c.QueryInt("limit", 24)
+
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 24
+	}
+
+	cacheKeyData := fmt.Sprintf("mangas_data_type_%s_page_%d_limit_%d", mangaType, page, limit)
+	
+	client := config.FirestoreClient
+	var mangas []map[string]interface{}
+	
+	// Try Redis Cache for data
 	if config.RedisClient != nil {
-		if val, err := config.RedisClient.Get(context.Background(), cacheKey).Result(); err == nil {
-			var cached []map[string]interface{}
-			if json.Unmarshal([]byte(val), &cached) == nil {
-				return c.JSON(fiber.Map{"success": true, "data": cached, "cached": true})
+		if val, err := config.RedisClient.Get(context.Background(), cacheKeyData).Result(); err == nil {
+			if json.Unmarshal([]byte(val), &mangas) == nil {
+				// We also need total count. Let's just fetch it from cache or DB separately.
 			}
 		}
 	}
 
-	client := config.FirestoreClient
-
-	iter := client.Collection("mangas").OrderBy("views", firestore.Desc).Documents(context.Background())
-	
-	var mangas []map[string]interface{}
-	for {
-		doc, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+	if mangas == nil {
+		query := client.Collection("mangas").OrderBy("createdAt", firestore.Desc)
+		if mangaType != "" {
+			query = query.Where("type", "==", mangaType)
 		}
 		
-		data := doc.Data()
-		data["id"] = doc.Ref.ID
-		mangas = append(mangas, data)
-	}
+		offset := (page - 1) * limit
+		iter := query.Offset(offset).Limit(limit).Documents(context.Background())
+		
+		for {
+			doc, err := iter.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				return c.Status(500).JSON(fiber.Map{"success": false, "error": err.Error()})
+			}
+			
+			data := doc.Data()
+			data["id"] = doc.Ref.ID
+			mangas = append(mangas, data)
+		}
+		
+		if mangas == nil {
+			mangas = []map[string]interface{}{}
+		}
 
-	if config.RedisClient != nil {
-		if cacheBytes, err := json.Marshal(mangas); err == nil {
-			config.RedisClient.Set(context.Background(), cacheKey, cacheBytes, 5*time.Minute)
+		if config.RedisClient != nil {
+			if cacheBytes, err := json.Marshal(mangas); err == nil {
+				config.RedisClient.Set(context.Background(), cacheKeyData, cacheBytes, 5*time.Minute)
+			}
 		}
 	}
 
-	return c.JSON(fiber.Map{"success": true, "data": mangas, "cached": false})
+	return c.JSON(fiber.Map{
+		"success": true, 
+		"data": mangas,
+	})
 }
 
 // GetMangaDetail returns a manga and its chapters

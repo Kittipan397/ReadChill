@@ -5,15 +5,15 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PaginationProps {
-  totalPages: number;
+  hasNextPage?: boolean;
 }
 
-export default function Pagination({ totalPages }: PaginationProps) {
+export default function Pagination({ hasNextPage = false }: PaginationProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get('page')) || 1;
 
-  if (totalPages <= 1) return null;
+  if (currentPage === 1 && !hasNextPage) return null;
 
   const createPageUrl = (pageNumber: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -21,61 +21,38 @@ export default function Pagination({ totalPages }: PaginationProps) {
     return `${pathname}?${params.toString()}`;
   };
 
-  const pages = [];
-  const maxPagesToShow = 5;
-  let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-  let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-
-  if (endPage - startPage + 1 < maxPagesToShow) {
-    startPage = Math.max(1, endPage - maxPagesToShow + 1);
-  }
-
-  for (let i = startPage; i <= endPage; i++) {
-    pages.push(i);
-  }
-
   return (
-    <div className="flex items-center justify-center gap-2 mt-12 mb-8">
+    <div className="flex items-center justify-center gap-4 mt-12 mb-8">
       {/* Prev */}
       {currentPage > 1 ? (
         <Link 
           href={createPageUrl(currentPage - 1)}
-          className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors"
+          className="px-6 py-2 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors font-medium"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={20} className="mr-1" /> หน้าก่อนหน้า
         </Link>
       ) : (
-        <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-800/50 text-slate-300 dark:text-zinc-600 cursor-not-allowed">
-          <ChevronLeft size={20} />
+        <div className="px-6 py-2 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-800/50 text-slate-300 dark:text-zinc-600 cursor-not-allowed font-medium">
+          <ChevronLeft size={20} className="mr-1" /> หน้าก่อนหน้า
         </div>
       )}
 
-      {/* Pages */}
-      {pages.map((page) => (
-        <Link
-          key={page}
-          href={createPageUrl(page)}
-          className={`w-10 h-10 flex items-center justify-center rounded-xl font-bold transition-all ${
-            currentPage === page 
-              ? 'bg-red-600 text-white shadow-lg shadow-red-600/20 border-transparent'
-              : 'bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:border-red-400 hover:text-red-500'
-          }`}
-        >
-          {page}
-        </Link>
-      ))}
+      {/* Current Page */}
+      <div className="w-10 h-10 flex items-center justify-center rounded-xl font-bold bg-red-600 text-white shadow-lg shadow-red-600/20 border-transparent">
+        {currentPage}
+      </div>
 
       {/* Next */}
-      {currentPage < totalPages ? (
+      {hasNextPage ? (
         <Link 
           href={createPageUrl(currentPage + 1)}
-          className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-500 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors"
+          className="px-6 py-2 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors font-medium"
         >
-          <ChevronRight size={20} />
+          หน้าถัดไป <ChevronRight size={20} className="ml-1" />
         </Link>
       ) : (
-        <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-800/50 text-slate-300 dark:text-zinc-600 cursor-not-allowed">
-          <ChevronRight size={20} />
+        <div className="px-6 py-2 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-zinc-800/50 text-slate-300 dark:text-zinc-600 cursor-not-allowed font-medium">
+          หน้าถัดไป <ChevronRight size={20} className="ml-1" />
         </div>
       )}
     </div>
