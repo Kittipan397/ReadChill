@@ -113,27 +113,32 @@ export default function MangaDetailPage() {
 
     setIsPurchasing(true);
     try {
-      // หักเหรียญและเพิ่มตอนที่ปลดล็อกลงใน User Document
-      const userRef = doc(db, 'users', user.uid);
-      await updateDoc(userRef, {
-        coins: increment(-price),
-        unlockedChapters: arrayUnion(`${manga.id}_${selectedChapter.id}`)
+      const token = await user.getIdToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/payment/purchase-chapter`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          mangaId: manga.id,
+          chapterId: selectedChapter.id,
+          price: price
+        })
       });
 
-      // บันทึกประวัติการซื้อ
-      await addDoc(collection(db, 'purchases'), {
-        userId: user.uid,
-        mangaId: manga.id,
-        chapterId: selectedChapter.id,
-        price: price,
-        createdAt: serverTimestamp()
-      });
+      const data = await res.json();
+      
+      if (!data.success) {
+        alert(data.message || 'เกิดข้อผิดพลาดในการซื้อตอน');
+        return;
+      }
       
       setSelectedChapter(null);
       router.push(`/manga/${manga.id}/chapter/${selectedChapter.id}`);
     } catch (error) {
       console.error(error);
-      alert('เกิดข้อผิดพลาดในการซื้อตอน');
+      alert('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
     } finally {
       setIsPurchasing(false);
     }

@@ -27,7 +27,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin() || isPartner();
       allow create: if isOwner(userId);
-      allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'earnedCoins'])) || isAdmin();
+      allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'earnedCoins', 'coins', 'unlockedChapters'])) || isAdmin();
       allow delete: if isAdmin();
       
       match /sessions/{sessionId} {
@@ -66,7 +66,21 @@ service cloud.firestore {
     // payments collection (เติมเหรียญ)
     match /payments/{paymentId} {
       allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isSignedIn();
+      allow create: if false; // Only Go Backend (Admin SDK) can create payments
+      allow update, delete: if isAdmin();
+    }
+
+    // donations collection (สนับสนุนนักวาด)
+    match /donations/{donationId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if false; // Only Go Backend (Admin SDK) can create donations
+      allow update, delete: if isAdmin();
+    }
+
+    // purchases collection (ซื้อตอน)
+    match /purchases/{purchaseId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if false; // Only Go Backend (Admin SDK) can create purchases
       allow update, delete: if isAdmin();
     }
 
@@ -74,7 +88,7 @@ service cloud.firestore {
     match /requests/{requestId} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn();
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
 

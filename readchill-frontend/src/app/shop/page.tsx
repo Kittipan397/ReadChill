@@ -96,44 +96,30 @@ export default function ShopPage() {
 
     setBuyingId(item.id);
     try {
-      // 1. Deduct coins
-      const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, {
-        coins: increment(-item.price)
+      const token = await user.getIdToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/payment/purchase-shop-item`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          id: item.id,
+          type: item.type,
+          name: item.name,
+          coverUrl: item.coverUrl,
+          imageUrls: item.imageUrls || [],
+          partnerId: item.partnerId,
+          price: item.price
+        })
       });
 
-      // 2. Add to inventory
-      const invRef = doc(db, "user_inventory", user.uid);
-      const invDoc = await getDoc(invRef);
-      const newItem = {
-        itemId: item.id,
-        type: item.type,
-        purchasedAt: new Date(),
-        coverUrl: item.coverUrl,
-        name: item.name,
-        imageUrls: item.imageUrls
-      };
-
-      if (invDoc.exists()) {
-        const currentItems = invDoc.data().items || [];
-        await updateDoc(invRef, {
-          items: [...currentItems, newItem]
-        });
-      } else {
-        await setDoc(invRef, {
-          items: [newItem]
-        });
+      const data = await res.json();
+      
+      if (!data.success) {
+        alert(data.message || t('shop.buy_error'));
+        return;
       }
-
-      // 3. Record Sale for Partner (Simplified Revenue tracking)
-      await addDoc(collection(db, "shop_sales"), {
-        itemId: item.id,
-        partnerId: item.partnerId,
-        buyerId: user.uid,
-        price: item.price,
-        type: item.type,
-        createdAt: serverTimestamp()
-      });
 
       alert(t('shop.buy_success'));
       fetchUserData(); // Refresh coins and inventory

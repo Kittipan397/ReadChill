@@ -25,7 +25,7 @@ func GetMangas(c *fiber.Ctx) error {
 
 	client := config.FirestoreClient
 
-	iter := client.Collection("mangas").OrderBy("views", 2).Documents(context.Background()) // 2 = Descending
+	iter := client.Collection("mangas").OrderBy("views", firestore.Desc).Documents(context.Background())
 	
 	var mangas []map[string]interface{}
 	for {
@@ -44,7 +44,7 @@ func GetMangas(c *fiber.Ctx) error {
 
 	if config.RedisClient != nil {
 		if cacheBytes, err := json.Marshal(mangas); err == nil {
-			config.RedisClient.Set(context.Background(), cacheKey, cacheBytes, 10*time.Second) // Reduced for faster updates during dev
+			config.RedisClient.Set(context.Background(), cacheKey, cacheBytes, 5*time.Minute)
 		}
 	}
 

@@ -18,6 +18,9 @@ func SetupRoutes(api fiber.Router) {
 	// Mount Payment routes (SlipOK)
 	paymentRoutes := api.Group("/payment")
 	paymentRoutes.Post("/submit-slip", middlewares.VerifyToken, handlers.SubmitSlip)
+	paymentRoutes.Post("/purchase-chapter", middlewares.VerifyToken, handlers.PurchaseChapter)
+	paymentRoutes.Post("/donate", middlewares.VerifyToken, handlers.DonateToCreator)
+	paymentRoutes.Post("/purchase-shop-item", middlewares.VerifyToken, handlers.PurchaseShopItem)
 
 	// Mount Auth routes
 	authRoutes := api.Group("/auth")

@@ -25,18 +25,34 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string, c
   const [isDonating, setIsDonating] = useState(false);
   const [donateSuccess, setDonateSuccess] = useState(false);
 
-  // Mock data for images
-  const chapterImages = [
-    'https://images.unsplash.com/photo-1542840410-3092f99611a3?q=80&w=1200&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1618331835717-801e976710b2?q=80&w=1200&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=1200&auto=format&fit=crop',
-  ];
+  const [chapterImages, setChapterImages] = useState<string[]>([]);
+  const [mangaTitle, setMangaTitle] = useState<string>('');
 
   useEffect(() => {
-    // Simulate API fetch delay
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchChapterData = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/mangas/${id}/chapters/${chapterId}`);
+        const data = await res.json();
+        
+        if (data.success && data.data) {
+          setChapterImages(data.data.images || []);
+          setMangaTitle(data.data.title || `ตอนที่ ${chapterId}`);
+        } else {
+          // If direct chapter fetch fails, try to fetch manga and get title
+          const mRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/mangas/${id}`);
+          const mData = await mRes.json();
+          if (mData.success && mData.data) {
+            setMangaTitle(mData.data.title || '');
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching chapter images:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchChapterData();
+  }, [id, chapterId]);
 
   const handleDonate = async () => {
     if (!user) {
@@ -51,29 +67,26 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string, c
     setDonateSuccess(false);
     
     try {
-      const userRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userRef);
+      const token = await user.getIdToken();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/payment/donate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          mangaId: id,
+          chapterId: chapterId,
+          amount: amount
+        })
+      });
+
+      const data = await res.json();
       
-      if (!userDoc.exists() || (userDoc.data().coins || 0) < amount) {
-        alert(t('reader.donate_not_enough'));
-        setIsDonating(false);
+      if (!data.success) {
+        alert(data.message || t('reader.donate_error'));
         return;
       }
-      
-      // Deduct coins from user
-      await updateDoc(userRef, {
-        coins: increment(-amount)
-      });
-      
-      // Add transaction to 'donations' collection (mocking sending to partner)
-      await addDoc(collection(db, 'donations'), {
-        userId: user.uid,
-        userName: user.displayName || 'Anonymous',
-        mangaId: id,
-        chapterId: chapterId,
-        amount: amount,
-        createdAt: serverTimestamp()
-      });
       
       setDonateSuccess(true);
       setTimeout(() => setDonateSuccess(false), 3000);
@@ -96,7 +109,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string, c
             <ChevronLeft size={24} />
           </Link>
           <div>
-            <h1 className="text-slate-900 dark:text-white font-bold text-lg leading-tight line-clamp-1 transition-colors">เกิดใหม่ทั้งทีก็เป็นสไลม์ไปซะแล้ว</h1>
+            <h1 className="text-slate-900 dark:text-white font-bold text-lg leading-tight line-clamp-1 transition-colors">{mangaTitle || 'กำลังโหลด...'}</h1>
             <p className="text-slate-500 dark:text-zinc-500 text-sm transition-colors">{t('reader.chapter_prefix')} {chapterId}</p>
           </div>
         </div>
@@ -120,7 +133,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string, c
           </div>
         ) : (
           <div className="w-full relative">
-            {chapterImages.map((src, idx) => (
+            {chapterImages.length > 0 ? chapterImages.map((src, idx) => (
               <div key={idx} className="relative w-full aspect-auto min-h-[50vh]">
                 {/* Watermark */}
                 <div className="absolute inset-0 z-10 flex items-center justify-center opacity-5 dark:opacity-10 pointer-events-none select-none transition-opacity">
@@ -136,9 +149,12 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string, c
                   loading={idx === 0 ? "eager" : "lazy"} // Eager load first page, lazy load rest
                   onDragStart={(e) => e.preventDefault()}
                   onContextMenu={(e) => e.preventDefault()}
+                  unoptimized
                 />
               </div>
-            ))}
+            )) : (
+              <div className="py-20 text-center text-slate-500">ไม่พบรูปภาพในตอนนี้</div>
+            )}
           </div>
         )}
       </div>
