@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, BookOpen, Palette, Eye } from 'lucide-react';
