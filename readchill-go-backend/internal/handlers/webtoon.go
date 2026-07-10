@@ -217,3 +217,70 @@ func ToggleSaveWebtoon(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"success": true, "message": "Webtoon saved", "isSaved": true})
 	}
 }
+
+// DownloadArt returns the original high-res image URL if the user has purchased it or if it is free.
+func DownloadArt(c *fiber.Ctx) error {
+	uid := c.Locals("uid").(string)
+	id := c.Params("id")
+
+	client := config.FirestoreClient
+
+	// Fetch Art
+	artDoc, err := client.Collection("webtoons").Doc(id).Get(context.Background())
+	if err != nil || !artDoc.Exists() {
+		return c.Status(404).JSON(fiber.Map{"success": false, "error": "Art not found"})
+	}
+
+	artData := artDoc.Data()
+	artType, _ := artData["type"].(string)
+	if artType != "art" {
+		return c.Status(400).JSON(fiber.Map{"success": false, "error": "Invalid art"})
+	}
+
+	priceVal, _ := artData["defaultPrice"]
+	price := int64(0)
+	switch p := priceVal.(type) {
+	case int64: price = p
+	case float64: price = int64(p)
+	case int: price = int64(p)
+	}
+
+	// Fetch User
+	userDoc, err := client.Collection("users").Doc(uid).Get(context.Background())
+	if err != nil || !userDoc.Exists() {
+		return c.Status(404).JSON(fiber.Map{"success": false, "error": "User not found"})
+	}
+
+	hasAccess := false
+	if price <= 0 {
+		hasAccess = true // Free
+	} else {
+		// Check unlockedArts
+		unlockedVal, _ := userDoc.DataAt("unlockedArts")
+		if unlockedArr, ok := unlockedVal.([]interface{}); ok {
+			for _, uArt := range unlockedArr {
+				if uArtStr, ok := uArt.(string); ok && uArtStr == id {
+					hasAccess = true
+					break
+				}
+			}
+		}
+	}
+
+	if !hasAccess {
+		return c.Status(403).JSON(fiber.Map{"success": false, "error": "คุณยังไม่ได้ซื้อภาพนี้"})
+	}
+
+	originalUrl, ok := artData["originalUrl"].(string)
+	if !ok || originalUrl == "" {
+		// Fallback to coverUrl if original is not uploaded yet
+		originalUrl, _ = artData["coverUrl"].(string)
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true, 
+		"data": map[string]string{
+			"downloadUrl": originalUrl,
+		},
+	})
+}

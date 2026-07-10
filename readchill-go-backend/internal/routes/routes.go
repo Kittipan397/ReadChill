@@ -13,6 +13,7 @@ func SetupRoutes(api fiber.Router) {
 	webtoonRoutes.Get("/", handlers.GetWebtoons)
 	webtoonRoutes.Get("/:id", handlers.GetWebtoonDetail)
 	webtoonRoutes.Get("/:id/chapters/:chapterId", handlers.GetChapter)
+	webtoonRoutes.Get("/art/:id/download", middlewares.VerifyToken, handlers.DownloadArt)
 	webtoonRoutes.Post("/:id/save", middlewares.VerifyToken, handlers.ToggleSaveWebtoon)
 
 	// Mount Payment routes (SlipOK)
@@ -21,6 +22,7 @@ func SetupRoutes(api fiber.Router) {
 	paymentRoutes.Post("/purchase-chapter", middlewares.VerifyToken, handlers.PurchaseChapter)
 	paymentRoutes.Post("/donate", middlewares.VerifyToken, handlers.DonateToCreator)
 	paymentRoutes.Post("/purchase-shop-item", middlewares.VerifyToken, handlers.PurchaseShopItem)
+	paymentRoutes.Post("/purchase-art", middlewares.VerifyToken, handlers.PurchaseArt)
 
 	// Mount Auth routes
 	authRoutes := api.Group("/auth")

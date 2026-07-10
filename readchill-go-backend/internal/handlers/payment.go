@@ -645,3 +645,160 @@ func PurchaseShopItem(c *fiber.Ctx) error {
 		"message": "ซื้อสินค้าสำเร็จ",
 	})
 }
+
+type PurchaseArtReq struct {
+	ArtId string `json:"artId"`
+	Price int    `json:"price"`
+}
+
+func PurchaseArt(c *fiber.Ctx) error {
+	uid := c.Locals("uid").(string)
+
+	var req PurchaseArtReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid request body"})
+	}
+
+	if req.ArtId == "" {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Missing required fields"})
+	}
+
+	client := config.FirestoreClient
+	ctx := context.Background()
+	userRef := client.Collection("users").Doc(uid)
+
+	err := client.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		// Read user data
+		doc, err := tx.Get(userRef)
+		if err != nil {
+			return err
+		}
+
+		coins, _ := doc.DataAt("coins")
+		unlocked, _ := doc.DataAt("unlockedArts")
+
+		// Check if already unlocked
+		if unlockedArr, ok := unlocked.([]interface{}); ok {
+			for _, art := range unlockedArr {
+				if artStr, ok := art.(string); ok && artStr == req.ArtId {
+					return fmt.Errorf("ALREADY_UNLOCKED")
+				}
+			}
+		}
+
+		// Fetch art (webtoon) from Firestore
+		artDoc, err := tx.Get(client.Collection("webtoons").Doc(req.ArtId))
+		if err != nil {
+			return fmt.Errorf("ART_NOT_FOUND")
+		}
+		
+		artCoins, _ := artDoc.DataAt("defaultPrice")
+		realPrice := int64(0)
+		switch c := artCoins.(type) {
+		case int64:
+			realPrice = c
+		case float64:
+			realPrice = int64(c)
+		case int:
+			realPrice = int64(c)
+		}
+
+		if realPrice <= 0 {
+			return fmt.Errorf("INVALID_PRICE")
+		}
+
+		currentCoins := int64(0)
+		switch c := coins.(type) {
+		case int64:
+			currentCoins = c
+		case float64:
+			currentCoins = int64(c)
+		}
+
+		if currentCoins < realPrice {
+			return fmt.Errorf("INSUFFICIENT_COINS")
+		}
+
+		// Fetch authorId and revenueShare
+		authorIdVal, _ := artDoc.DataAt("authorId")
+		authorId := ""
+		if aId, ok := authorIdVal.(string); ok {
+			authorId = aId
+		}
+		
+		revenueShareVal, err := artDoc.DataAt("revenueShare")
+		revenueShare := int64(73)
+		if err == nil {
+			switch r := revenueShareVal.(type) {
+			case int64: revenueShare = r
+			case float64: revenueShare = int64(r)
+			case int: revenueShare = int64(r)
+			}
+		}
+
+		partnerShare := (realPrice * revenueShare) / 100
+		platformShare := realPrice - partnerShare
+
+		// Update partner's revenueBalance
+		if authorId != "" {
+			partnerRef := client.Collection("users").Doc(authorId)
+			err = tx.Set(partnerRef, map[string]interface{}{
+				"revenueBalance": firestore.Increment(partnerShare),
+			}, firestore.MergeAll)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Update user coins and unlockedArts
+		err = tx.Update(userRef, []firestore.Update{
+			{Path: "coins", Value: firestore.Increment(-realPrice)},
+			{Path: "unlockedArts", Value: firestore.ArrayUnion(req.ArtId)},
+		})
+		if err != nil {
+			// If unlockedArts field doesn't exist, we might need Set with MergeAll
+			err = tx.Set(userRef, map[string]interface{}{
+				"coins": firestore.Increment(-realPrice),
+				"unlockedArts": firestore.ArrayUnion(req.ArtId),
+			}, firestore.MergeAll)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Record purchase
+		purchaseRef := client.Collection("purchases").NewDoc()
+		return tx.Set(purchaseRef, map[string]interface{}{
+			"userId":    uid,
+			"artId":     req.ArtId,
+			"price":     realPrice,
+			"partnerId": authorId,
+			"partnerShare": partnerShare,
+			"platformShare": platformShare,
+			"revenueShareRate": revenueShare,
+			"type":      "art",
+			"createdAt": firestore.ServerTimestamp,
+		})
+	})
+
+	if err != nil {
+		if err.Error() == "ALREADY_UNLOCKED" {
+			return c.Status(400).JSON(fiber.Map{"success": false, "message": "ตอนนี้คุณเป็นเจ้าของภาพนี้แล้ว"})
+		}
+		if err.Error() == "INSUFFICIENT_COINS" {
+			return c.Status(400).JSON(fiber.Map{"success": false, "message": "เหรียญไม่เพียงพอ กรุณาเติมเหรียญ"})
+		}
+		if err.Error() == "ART_NOT_FOUND" {
+			return c.Status(404).JSON(fiber.Map{"success": false, "message": "ไม่พบภาพวาดที่ต้องการซื้อ"})
+		}
+		if err.Error() == "INVALID_PRICE" {
+			return c.Status(400).JSON(fiber.Map{"success": false, "message": "ภาพวาดนี้ไม่สามารถซื้อได้"})
+		}
+		return c.Status(500).JSON(fiber.Map{"success": false, "message": "เกิดข้อผิดพลาดในการซื้อภาพวาด"})
+	}
+
+	return c.JSON(fiber.Map{
+		"success": true,
+		"message": "ซื้อภาพวาดสำเร็จ",
+	})
+}
