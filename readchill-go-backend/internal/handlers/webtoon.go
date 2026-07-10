@@ -97,6 +97,13 @@ func GetWebtoonDetail(c *fiber.Ctx) error {
 	webtoonData := doc.Data()
 	webtoonData["id"] = doc.Ref.ID
 
+	// Increment view count asynchronously
+	go func(webtoonId string) {
+		client.Collection("webtoons").Doc(webtoonId).Update(context.Background(), []firestore.Update{
+			{Path: "views", Value: firestore.Increment(1)},
+		})
+	}(id)
+
 	// Fetch chapters
 	iter := client.Collection("webtoons").Doc(id).Collection("chapters").OrderBy("number", 1).Documents(context.Background()) // 1 = Ascending
 	var chapters []map[string]interface{}
@@ -133,6 +140,13 @@ func GetChapter(c *fiber.Ctx) error {
 
 	data := doc.Data()
 	data["id"] = doc.Ref.ID
+
+	// Increment view count asynchronously
+	go func(webtoonId string) {
+		client.Collection("webtoons").Doc(webtoonId).Update(context.Background(), []firestore.Update{
+			{Path: "views", Value: firestore.Increment(1)},
+		})
+	}(id)
 
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
