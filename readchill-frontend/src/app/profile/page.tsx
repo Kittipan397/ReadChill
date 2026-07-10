@@ -17,12 +17,12 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { storage, db } from '@/lib/firebase';
-import MangaCard from '@/components/ui/MangaCard';
+import WebtoonCard from '@/components/ui/WebtoonCard';
 
 export default function ProfilePage() {
   const { user, userData, loading } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('comics');
+  const [activeTab, setActiveTab] = useState('webtoons');
 
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [cropType, setCropType] = useState<'cover' | 'avatar' | null>(null);
@@ -52,7 +52,7 @@ export default function ProfilePage() {
     const fetchMyWorks = async () => {
       setLoadingWorks(true);
       try {
-        const q = query(collection(db, 'mangas'), where('authorId', '==', user.uid));
+        const q = query(collection(db, 'webtoons'), where('authorId', '==', user.uid));
         const snapshot = await getDocs(q);
         const works = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setMyWorks(works);
@@ -185,7 +185,7 @@ export default function ProfilePage() {
 
   const tabs = [
     { id: 'artworks', label: 'ผลงานของฉัน', icon: Palette, hide: userData?.role !== 'artist' },
-    { id: 'comics', label: 'คอมมิค', icon: BookOpen },
+    { id: 'webtoons', label: 'เว็บตูน', icon: BookOpen },
     { id: 'novels', label: 'นิยาย', icon: BookOpen },
     { id: 'arts', label: 'ภาพวาด', icon: Palette },
     { id: 'comments', label: 'คอมเมนต์', icon: MessageSquare },
@@ -256,7 +256,7 @@ export default function ProfilePage() {
                     unoptimized
                   />
                   {userData?.activeFrame && (
-                    <div className="absolute -inset-4 z-30 pointer-events-none">
+                    <div className="absolute -inset-4 z-30 pointer-events-none mix-blend-screen">
                       <Image src={userData.activeFrame} alt="frame" fill className="object-contain scale-[1.15]" unoptimized />
                     </div>
                   )}
@@ -373,7 +373,7 @@ export default function ProfilePage() {
             {/* Tab Content */}
             {activeTab === 'security' ? (
               <SecurityTab />
-            ) : ['comics', 'novels', 'arts', 'artworks'].includes(activeTab) ? (
+            ) : ['webtoons', 'novels', 'arts', 'artworks'].includes(activeTab) ? (
               <div className="bg-white/70 dark:bg-[#121212]/80 backdrop-blur-xl rounded-3xl border border-slate-200 dark:border-white/5 p-8 shadow-2xl min-h-[600px]">
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
                   {tabs.find(t => t.id === activeTab)?.label}
@@ -383,11 +383,11 @@ export default function ProfilePage() {
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                     {myWorks
-                      .filter(work => activeTab === 'artworks' ? true : work.type === activeTab.replace('s', '') || (activeTab === 'comics' && (work.type === 'comic' || work.type === 'manga')) || (activeTab === 'novels' && work.type === 'novel') || (activeTab === 'arts' && work.type === 'art'))
+                      .filter(work => activeTab === 'artworks' ? true : work.type === activeTab.replace('s', '') || (activeTab === 'webtoons' && (work.type === 'comic' || work.type === 'webtoon')) || (activeTab === 'novels' && work.type === 'novel') || (activeTab === 'arts' && work.type === 'art'))
                       .map((work) => (
-                      <MangaCard key={work.id} {...work} />
+                      <WebtoonCard key={work.id} {...work} />
                     ))}
-                    {myWorks.filter(work => activeTab === 'artworks' ? true : work.type === activeTab.replace('s', '') || (activeTab === 'comics' && (work.type === 'comic' || work.type === 'manga')) || (activeTab === 'novels' && work.type === 'novel') || (activeTab === 'arts' && work.type === 'art')).length === 0 && (
+                    {myWorks.filter(work => activeTab === 'artworks' ? true : work.type === activeTab.replace('s', '') || (activeTab === 'webtoons' && (work.type === 'comic' || work.type === 'webtoon')) || (activeTab === 'novels' && work.type === 'novel') || (activeTab === 'arts' && work.type === 'art')).length === 0 && (
                       <div className="col-span-full py-20 text-center flex flex-col items-center">
                         <BookOpen size={48} className="text-slate-300 dark:text-zinc-700 mb-4" />
                         <h3 className="text-xl font-bold text-slate-700 dark:text-zinc-300 mb-2">ยังไม่มีผลงาน</h3>

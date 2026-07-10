@@ -26,24 +26,34 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string, c
   const [donateSuccess, setDonateSuccess] = useState(false);
 
   const [chapterImages, setChapterImages] = useState<string[]>([]);
-  const [mangaTitle, setMangaTitle] = useState<string>('');
+  const [chapterContent, setChapterContent] = useState<string>('');
+  const [webtoonTitle, setWebtoonTitle] = useState<string>('');
 
   useEffect(() => {
     const fetchChapterData = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/mangas/${id}/chapters/${chapterId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/webtoons/${id}/chapters/${chapterId}`);
         const data = await res.json();
         
         if (data.success && data.data) {
           setChapterImages(data.data.images || []);
-          setMangaTitle(data.data.title || `ตอนที่ ${chapterId}`);
+          setChapterContent(data.data.content || '');
+          setWebtoonTitle(data.data.title || `ตอนที่ ${chapterId}`);
         } else {
-          // If direct chapter fetch fails, try to fetch manga and get title
-          const mRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/mangas/${id}`);
+          // If direct chapter fetch fails, try to fetch webtoon and get title
+          const mRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/webtoons/${id}`);
           const mData = await mRes.json();
           if (mData.success && mData.data) {
-            setMangaTitle(mData.data.title || '');
+            setWebtoonTitle(mData.data.title || '');
           }
+        }
+        
+        // Save to read history
+        if (data.success && data.data && data.data.number) {
+          localStorage.setItem(`readHistory_${id}`, JSON.stringify({
+            chapterId: chapterId,
+            number: data.data.number
+          }));
         }
       } catch (err) {
         console.error('Error fetching chapter images:', err);
@@ -75,7 +85,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string, c
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          mangaId: id,
+          webtoonId: id,
           chapterId: chapterId,
           amount: amount
         })
@@ -105,11 +115,11 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string, c
       {/* Top Navbar (Reader specific) */}
       <div className="sticky top-0 z-50 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-slate-200 dark:border-zinc-800 px-4 py-3 flex items-center justify-between transition-colors shadow-sm">
         <div className="flex items-center gap-4">
-          <Link href={`/manga/${id}`} className="p-2 bg-slate-100 dark:bg-zinc-900 rounded-full text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors">
+          <Link href={`/webtoon/${id}`} className="p-2 bg-slate-100 dark:bg-zinc-900 rounded-full text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors">
             <ChevronLeft size={24} />
           </Link>
           <div>
-            <h1 className="text-slate-900 dark:text-white font-bold text-lg leading-tight line-clamp-1 transition-colors">{mangaTitle || 'กำลังโหลด...'}</h1>
+            <h1 className="text-slate-900 dark:text-white font-bold text-lg leading-tight line-clamp-1 transition-colors">{webtoonTitle || 'กำลังโหลด...'}</h1>
             <p className="text-slate-500 dark:text-zinc-500 text-sm transition-colors">{t('reader.chapter_prefix')} {chapterId}</p>
           </div>
         </div>
@@ -133,7 +143,14 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string, c
           </div>
         ) : (
           <div className="w-full relative">
-            {chapterImages.length > 0 ? chapterImages.map((src, idx) => (
+            {chapterContent ? (
+              <div className="px-6 py-8 md:px-12 md:py-16 text-slate-800 dark:text-zinc-200">
+                <div 
+                  className="prose prose-lg md:prose-xl dark:prose-invert max-w-none text-xl leading-loose md:text-2xl md:leading-loose whitespace-pre-wrap font-serif"
+                  dangerouslySetInnerHTML={{ __html: chapterContent }}
+                />
+              </div>
+            ) : chapterImages.length > 0 ? chapterImages.map((src, idx) => (
               <div key={idx} className="relative w-full aspect-auto min-h-[50vh]">
                 {/* Watermark */}
                 <div className="absolute inset-0 z-10 flex items-center justify-center opacity-5 dark:opacity-10 pointer-events-none select-none transition-opacity">
@@ -153,7 +170,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string, c
                 />
               </div>
             )) : (
-              <div className="py-20 text-center text-slate-500">ไม่พบรูปภาพในตอนนี้</div>
+              <div className="py-20 text-center text-slate-500">ไม่พบเนื้อหาในตอนนี้</div>
             )}
           </div>
         )}
@@ -241,7 +258,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string, c
       {/* Chapter Comments */}
       {!isLoading && (
         <div className="max-w-3xl mx-auto px-4 pb-12">
-          <CommentSection mangaId={`${id}_chapter_${chapterId}`} />
+          <CommentSection webtoonId={`${id}_chapter_${chapterId}`} />
         </div>
       )}
     </div>

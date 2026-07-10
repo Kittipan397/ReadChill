@@ -106,7 +106,7 @@ export default function Navbar() {
                       unoptimized
                     />
                     {userData?.activeFrame && (
-                      <div className="absolute -inset-1.5 z-10 pointer-events-none">
+                      <div className="absolute -inset-1.5 z-10 pointer-events-none mix-blend-screen">
                         <Image src={userData.activeFrame} alt="frame" fill className="object-contain scale-110" unoptimized />
                       </div>
                     )}
@@ -131,7 +131,7 @@ export default function Navbar() {
                             unoptimized
                           />
                           {userData?.activeFrame && (
-                            <div className="absolute -inset-2 z-10 pointer-events-none">
+                            <div className="absolute -inset-2 z-10 pointer-events-none mix-blend-screen">
                               <Image src={userData.activeFrame} alt="frame" fill className="object-contain scale-110" unoptimized />
                             </div>
                           )}

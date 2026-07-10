@@ -14,7 +14,7 @@ export default function LibraryPage() {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'history' | 'saved' | 'unlocked'>('history');
 
-  const [savedMangas, setSavedMangas] = useState<any[]>([]);
+  const [savedWebtoons, setSavedWebtoons] = useState<any[]>([]);
   const [isLoadingSaved, setIsLoadingSaved] = useState(false);
 
   useEffect(() => {
@@ -23,17 +23,17 @@ export default function LibraryPage() {
         setIsLoadingSaved(true);
         try {
           const token = await user.getIdToken();
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/saved-mangas`, {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/saved-webtoons`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
           });
           const result = await res.json();
           if (result.success) {
-            setSavedMangas(result.data || []);
+            setSavedWebtoons(result.data || []);
           }
         } catch (error) {
-          console.error("Failed to fetch saved mangas", error);
+          console.error("Failed to fetch saved webtoons", error);
         } finally {
           setIsLoadingSaved(false);
         }
@@ -55,7 +55,7 @@ export default function LibraryPage() {
   );
 
   // Mock Data
-  const historyMangas = [
+  const historyWebtoons = [
     {
       id: 'lD47y3pc5qlC6hBBQHtO',
       title: 'เกิดใหม่ทั้งทีก็เป็นสไลม์ไปซะแล้ว',
@@ -76,12 +76,12 @@ export default function LibraryPage() {
 
   // Use real unlocked chapters from userData
   const realUnlocked = user && userData?.unlockedChapters ? userData.unlockedChapters.map((chStr: string) => {
-    const [mangaId, chapterId] = chStr.split('_');
-    // We mock the title/details since we don't fetch all manga here yet
+    const [webtoonId, chapterId] = chStr.split('_');
+    // We mock the title/details since we don't fetch all webtoon here yet
     return {
-      mangaId,
-      mangaTitle: mangaId === 'lD47y3pc5qlC6hBBQHtO' ? 'เกิดใหม่ทั้งทีก็เป็นสไลม์ไปซะแล้ว' : 'จอมเวทย์ฝึกหัด',
-      chapter: mangaId === 'lD47y3pc5qlC6hBBQHtO' && chapterId === '4' ? 'ตอนที่ 4 - หมู่บ้านก็อบลิน' : `ตอนที่ ${chapterId}`,
+      webtoonId,
+      webtoonTitle: webtoonId === 'lD47y3pc5qlC6hBBQHtO' ? 'เกิดใหม่ทั้งทีก็เป็นสไลม์ไปซะแล้ว' : 'จอมเวทย์ฝึกหัด',
+      chapter: webtoonId === 'lD47y3pc5qlC6hBBQHtO' && chapterId === '4' ? 'ตอนที่ 4 - หมู่บ้านก็อบลิน' : `ตอนที่ ${chapterId}`,
       price: 10,
       unlockDate: 'วันนี้'
     };
@@ -136,22 +136,22 @@ export default function LibraryPage() {
         {activeTab === 'history' && (
           <div className="animate-in fade-in duration-500">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {historyMangas.map((manga) => (
-                <Link href={`/manga/${manga.id}`} key={manga.id} className="group flex gap-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors shadow-sm">
+              {historyWebtoons.map((webtoon) => (
+                <Link href={`/webtoon/${webtoon.id}`} key={webtoon.id} className="group flex gap-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors shadow-sm">
                   <div className="w-24 aspect-[2/3] relative rounded-lg overflow-hidden shrink-0 bg-slate-100 dark:bg-zinc-800">
-                    <Image src={manga.coverUrl} alt={manga.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <Image src={webtoon.coverUrl} alt={webtoon.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="flex flex-col py-1 overflow-hidden">
-                    <h3 className="font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{manga.title}</h3>
-                    <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1 line-clamp-1 flex-1">{manga.lastRead}</p>
+                    <h3 className="font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{webtoon.title}</h3>
+                    <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1 line-clamp-1 flex-1">{webtoon.lastRead}</p>
                     
                     <div className="mt-2">
                       <div className="w-full h-1.5 bg-slate-200 dark:bg-zinc-800 rounded-full overflow-hidden mb-2">
-                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${manga.progress}%` }}></div>
+                        <div className="h-full bg-blue-500 rounded-full" style={{ width: `${webtoon.progress}%` }}></div>
                       </div>
                       <div className="flex items-center justify-between text-xs text-slate-400 dark:text-zinc-500">
-                        <span>{t('library.read_progress').replace('{percent}', manga.progress.toString())}</span>
-                        <span className="flex items-center gap-1"><History size={12} /> {manga.timestamp}</span>
+                        <span>{t('library.read_progress').replace('{percent}', webtoon.progress.toString())}</span>
+                        <span className="flex items-center gap-1"><History size={12} /> {webtoon.timestamp}</span>
                       </div>
                     </div>
                   </div>
@@ -168,7 +168,7 @@ export default function LibraryPage() {
               <div className="flex justify-center items-center py-20">
                 <div className="w-8 h-8 border-4 border-slate-200 dark:border-zinc-800 border-t-blue-500 rounded-full animate-spin"></div>
               </div>
-            ) : savedMangas.length === 0 ? (
+            ) : savedWebtoons.length === 0 ? (
               <div className="text-center py-20 bg-white dark:bg-zinc-900/50 border border-slate-200 dark:border-zinc-800 border-dashed rounded-2xl shadow-sm">
                 <Bookmark size={48} className="text-slate-300 dark:text-zinc-700 mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('library.no_saved')}</h3>
@@ -179,23 +179,23 @@ export default function LibraryPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {savedMangas.map((manga) => (
-                  <Link href={`/manga/${manga.id}`} key={manga.id} className="group flex gap-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors shadow-sm">
+                {savedWebtoons.map((webtoon) => (
+                  <Link href={`/webtoon/${webtoon.id}`} key={webtoon.id} className="group flex gap-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors shadow-sm">
                     <div className="w-24 aspect-[2/3] relative rounded-lg overflow-hidden shrink-0 bg-slate-100 dark:bg-zinc-800">
-                      <Image src={manga.coverUrl} alt={manga.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <Image src={webtoon.coverUrl} alt={webtoon.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
                     </div>
                     <div className="flex flex-col py-1 overflow-hidden">
-                      <h3 className="font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{manga.title}</h3>
+                      <h3 className="font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{webtoon.title}</h3>
                       <div className="flex flex-wrap gap-1 mt-2">
-                        {(manga.tags || []).slice(0, 2).map((tag: string) => (
+                        {(webtoon.tags || []).slice(0, 2).map((tag: string) => (
                           <span key={tag} className="text-[10px] px-2 py-0.5 bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded-full">
                             {tag}
                           </span>
                         ))}
                       </div>
                       <div className="mt-auto flex items-center justify-between text-xs text-slate-400 dark:text-zinc-500">
-                        <span className="flex items-center gap-1 text-yellow-500"><Star size={12} className="fill-current" /> {manga.rating}</span>
-                        <span>{manga.status}</span>
+                        <span className="flex items-center gap-1 text-yellow-500"><Star size={12} className="fill-current" /> {webtoon.rating}</span>
+                        <span>{webtoon.status}</span>
                       </div>
                     </div>
                   </Link>
@@ -223,7 +223,7 @@ export default function LibraryPage() {
                     {unlockedChapters.map((chapter: any, idx: number) => (
                       <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition-colors">
                         <td className="px-6 py-4">
-                          <div className="font-bold text-slate-900 dark:text-white">{chapter.mangaTitle}</div>
+                          <div className="font-bold text-slate-900 dark:text-white">{chapter.webtoonTitle}</div>
                           <div className="text-slate-500 dark:text-zinc-500 mt-1">{chapter.chapter}</div>
                         </td>
                         <td className="px-6 py-4">
@@ -235,7 +235,7 @@ export default function LibraryPage() {
                           {chapter.unlockDate}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <Link href={`/manga/${chapter.mangaId}`} className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium inline-flex items-center gap-1">
+                          <Link href={`/webtoon/${chapter.webtoonId}`} className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium inline-flex items-center gap-1">
                             {t('library.read_again')} <ArrowRight size={14} />
                           </Link>
                         </td>

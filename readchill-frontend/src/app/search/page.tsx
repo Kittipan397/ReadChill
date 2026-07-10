@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { Search as SearchIcon, User, Filter, BookOpen, X } from 'lucide-react';
-import MangaCard from '@/components/ui/MangaCard';
+import WebtoonCard from '@/components/ui/WebtoonCard';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -23,8 +23,8 @@ export default function SearchPage() {
   const [partnerUsers, setPartnerUsers] = useState<any[]>([]);
   const [showAuthorDropdown, setShowAuthorDropdown] = useState(false);
 
-  // Mangas Data State
-  const [mangas, setMangas] = useState<any[]>([]);
+  // Webtoons Data State
+  const [webtoons, setWebtoons] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch partners on mount
@@ -40,22 +40,22 @@ export default function SearchPage() {
       }
     };
     
-    const fetchMangas = async () => {
+    const fetchWebtoons = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/mangas?limit=500`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/webtoons?limit=500`);
         const result = await res.json();
         if (result.success) {
-          setMangas(result.data || []);
+          setWebtoons(result.data || []);
         }
       } catch (err) {
-        console.error("Error fetching mangas", err);
+        console.error("Error fetching webtoons", err);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchPartners();
-    fetchMangas();
+    fetchWebtoons();
   }, []);
 
   const filteredAuthors = useMemo(() => {
@@ -66,13 +66,13 @@ export default function SearchPage() {
   // Extract all unique genres from the database
   const ALL_GENRES = useMemo(() => {
     const genresSet = new Set<string>();
-    mangas.forEach(m => {
+    webtoons.forEach(m => {
       if (m.tags && Array.isArray(m.tags)) {
         m.tags.forEach((t: string) => genresSet.add(t));
       }
     });
     return Array.from(genresSet);
-  }, [mangas]);
+  }, [webtoons]);
 
   // Available Genres after filtering by input and removing already selected
   const availableGenres = useMemo(() => {
@@ -92,7 +92,7 @@ export default function SearchPage() {
 
   // Real-time Filtering
   const filteredResults = useMemo(() => {
-    return mangas.filter(item => {
+    return webtoons.filter(item => {
       // Filter by Title
       if (searchTerm && !item.title?.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
@@ -114,7 +114,7 @@ export default function SearchPage() {
       
       return true;
     });
-  }, [searchTerm, searchAuthor, searchType, selectedGenres, mangas]);
+  }, [searchTerm, searchAuthor, searchType, selectedGenres, webtoons]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 pb-12 transition-colors">
@@ -216,7 +216,7 @@ export default function SearchPage() {
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors appearance-none cursor-pointer"
                 >
                   <option value="all">{t('search.type_all')}</option>
-                  <option value="comic">{t('search.type_comic')}</option>
+                  <option value="webtoon">{t('search.type_comic')}</option>
                   <option value="novel">{t('search.type_novel')}</option>
                   <option value="art">{t('search.type_art')}</option>
                 </select>
@@ -322,7 +322,7 @@ export default function SearchPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
               {filteredResults.map(item => (
                 <div key={item.id} className="relative group">
-                  <MangaCard 
+                  <WebtoonCard 
                     id={item.id}
                     title={item.title}
                     coverUrl={item.coverUrl}

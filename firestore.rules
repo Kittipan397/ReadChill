@@ -35,8 +35,8 @@ service cloud.firestore {
       }
     }
 
-    // mangas collection
-    match /mangas/{mangaId} {
+    // webtoons collection
+    match /webtoons/{webtoonId} {
       allow read: if true;
       allow create: if isPartner() || isAdmin();
       allow update, delete: if (isPartner() && resource.data.authorId == request.auth.uid) || isAdmin();
@@ -99,8 +99,8 @@ service cloud.firestore {
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
     }
 
-    // manga_comments collection (คอมเมนต์การ์ตูน - ระบบใหม่)
-    match /manga_comments/{commentId} {
+    // webtoon_comments collection (คอมเมนต์การ์ตูน - ระบบใหม่)
+    match /webtoon_comments/{commentId} {
       allow read: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);

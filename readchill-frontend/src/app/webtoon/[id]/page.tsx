@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { Star, Eye, Clock, List, Play, ShoppingCart, X, Bookmark } from 'lucide-react';
+import { Star, Eye, Clock, List, Play, ShoppingCart, X, Heart } from 'lucide-react';
 import CommentSection from '@/components/comments/CommentSection';
 import { useLanguage } from '@/context/LanguageContext';
 import { useParams, useRouter } from 'next/navigation';
@@ -22,7 +22,7 @@ interface Chapter {
   hasUnlocked?: boolean;
 }
 
-export default function MangaDetailPage() {
+export default function WebtoonDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
@@ -33,50 +33,62 @@ export default function MangaDetailPage() {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [localIsSaved, setLocalIsSaved] = useState(false);
+  const [readHistory, setReadHistory] = useState<{chapterId: string, number: number} | null>(null);
 
-  const mangaId = id;
-  const [mangaBase, setMangaBase] = useState<any>(null);
-  const [isLoadingManga, setIsLoadingManga] = useState(true);
+  const webtoonId = id;
+  const [webtoonBase, setWebtoonBase] = useState<any>(null);
+  const [isLoadingWebtoon, setIsLoadingWebtoon] = useState(true);
 
   useEffect(() => {
-    const fetchManga = async () => {
+    const fetchWebtoon = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/mangas/${mangaId}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/webtoons/${webtoonId}`);
         const result = await res.json();
         if (result.success) {
-          setMangaBase(result.data);
+          setWebtoonBase(result.data);
         } else {
-          console.error("Manga not found");
+          console.error("Webtoon not found");
         }
       } catch (err) {
-        console.error("Error fetching manga", err);
+        console.error("Error fetching webtoon", err);
       } finally {
-        setIsLoadingManga(false);
+        setIsLoadingWebtoon(false);
       }
     };
-    fetchManga();
-  }, [mangaId]);
+    fetchWebtoon();
+  }, [webtoonId]);
 
-  const manga = useMemo(() => {
-    if (!mangaBase) return null;
+  const webtoon = useMemo(() => {
+    if (!webtoonBase) return null;
     const unlocked = userData?.unlockedChapters || [];
     return {
-      ...mangaBase,
-      chapters: (mangaBase.chapters || []).map((ch: any) => ({
+      ...webtoonBase,
+      chapters: (webtoonBase.chapters || []).map((ch: any) => ({
         ...ch,
-        isLocked: ch.isLocked && !unlocked.includes(`${mangaBase.id}_${ch.id}`),
-        hasUnlocked: ch.isLocked && unlocked.includes(`${mangaBase.id}_${ch.id}`)
+        isLocked: ch.isLocked && !unlocked.includes(`${webtoonBase.id}_${ch.id}`),
+        hasUnlocked: ch.isLocked && unlocked.includes(`${webtoonBase.id}_${ch.id}`)
       }))
     };
-  }, [mangaBase, userData?.unlockedChapters]);
+  }, [webtoonBase, userData?.unlockedChapters]);
 
   useEffect(() => {
-    if (manga && userData?.savedMangas) {
-      setLocalIsSaved(userData.savedMangas.includes(manga.id));
+    if (webtoon && userData?.savedWebtoons) {
+      setLocalIsSaved(userData.savedWebtoons.includes(webtoon.id));
     }
-  }, [manga, userData?.savedMangas]);
+  }, [webtoon, userData?.savedWebtoons]);
 
-  if (isLoadingManga || !manga) return (
+  useEffect(() => {
+    if (webtoonId) {
+      const historyStr = localStorage.getItem(`readHistory_${webtoonId}`);
+      if (historyStr) {
+        try {
+          setReadHistory(JSON.parse(historyStr));
+        } catch (e) {}
+      }
+    }
+  }, [webtoonId]);
+
+  if (isLoadingWebtoon || !webtoon) return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex items-center justify-center transition-colors">
       <div className="w-12 h-12 border-4 border-slate-200 dark:border-zinc-800 border-t-blue-500 rounded-full animate-spin"></div>
     </div>
@@ -96,7 +108,7 @@ export default function MangaDetailPage() {
       }
       setSelectedChapter(chapter);
     } else {
-      router.push(`/manga/${manga.id}/chapter/${chapter.id}`);
+      router.push(`/webtoon/${webtoon.id}/chapter/${chapter.id}`);
     }
   };
 
@@ -121,7 +133,7 @@ export default function MangaDetailPage() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          mangaId: manga.id,
+          webtoonId: webtoon.id,
           chapterId: selectedChapter.id,
           price: price
         })
@@ -135,7 +147,7 @@ export default function MangaDetailPage() {
       }
       
       setSelectedChapter(null);
-      router.push(`/manga/${manga.id}/chapter/${selectedChapter.id}`);
+      router.push(`/webtoon/${webtoon.id}/chapter/${selectedChapter.id}`);
     } catch (error) {
       console.error(error);
       alert('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
@@ -152,7 +164,7 @@ export default function MangaDetailPage() {
     setIsSaving(true);
     try {
       const token = await user.getIdToken();
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/mangas/${manga.id}/save`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/webtoons/${webtoon.id}/save`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -213,10 +225,10 @@ export default function MangaDetailPage() {
             {/* Chapter Box */}
             <div className="flex gap-4 p-4 bg-zinc-900/50 border border-red-900/30 rounded-xl">
               <div className="w-16 h-24 relative rounded-lg overflow-hidden shrink-0">
-                <Image src={manga.coverUrl} alt={manga.title} fill className="object-cover" unoptimized />
+                <Image src={webtoon.coverUrl} alt={webtoon.title} fill className="object-cover" unoptimized />
               </div>
               <div className="flex flex-col justify-center">
-                <h3 className="text-white font-bold line-clamp-1">{manga.title}</h3>
+                <h3 className="text-white font-bold line-clamp-1">{webtoon.title}</h3>
                 <span className="text-zinc-400 text-sm mt-1">ตอนที่ {selectedChapter.number} {selectedChapter.title}</span>
                 <span className="inline-flex items-center gap-1 mt-2 text-yellow-500 font-bold text-sm">
                   🪙 {price} เหรียญ
@@ -278,8 +290,8 @@ export default function MangaDetailPage() {
       {/* Backdrop */}
       <div className="relative h-[40vh] md:h-[50vh] w-full border-b border-slate-200 dark:border-zinc-800 transition-colors">
         <Image
-          src={manga.coverUrl}
-          alt={manga.title}
+          src={webtoon.coverUrl}
+          alt={webtoon.title}
           fill
           className="object-cover opacity-30 blur-sm"
           priority
@@ -294,8 +306,8 @@ export default function MangaDetailPage() {
           <div className="shrink-0 mx-auto md:mx-0 w-48 md:w-64">
             <div className="aspect-[2/3] relative rounded-xl overflow-hidden shadow-2xl border-4 border-white dark:border-zinc-900 transition-colors">
               <Image
-                src={manga.coverUrl}
-                alt={manga.title}
+                src={webtoon.coverUrl}
+                alt={webtoon.title}
                 fill
                 className="object-cover"
                 priority
@@ -305,30 +317,30 @@ export default function MangaDetailPage() {
 
           {/* Info */}
           <div className="flex-1 text-center md:text-left pt-2 md:pt-16">
-            <h1 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4 leading-tight">{manga.title}</h1>
+            <h1 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-4 leading-tight">{webtoon.title}</h1>
             
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-slate-600 dark:text-zinc-400 text-sm font-medium mb-6">
               <span className="flex items-center gap-1 text-yellow-500">
-                <Star size={16} className="fill-yellow-500" /> {manga.rating}
+                <Star size={16} className="fill-yellow-500" /> {webtoon.rating}
               </span>
               <span className="flex items-center gap-1">
-                <Eye size={16} /> {formatViews(manga.views)}
+                <Eye size={16} /> {formatViews(webtoon.views)}
               </span>
               <span className="flex items-center gap-1">
-                {t('manga.author')} 
-                {manga.authorId ? (
-                  <Link href={`/creator/${manga.authorId}`} className="text-blue-600 dark:text-blue-400 hover:underline font-bold">
-                    {manga.author}
+                {t('webtoon.author')} 
+                {webtoon.authorId ? (
+                  <Link href={`/creator/${webtoon.authorId}`} className="text-blue-600 dark:text-blue-400 hover:underline font-bold">
+                    {webtoon.author}
                   </Link>
                 ) : (
-                  <span>{manga.author}</span>
+                  <span>{webtoon.author}</span>
                 )}
               </span>
-              <span className="text-blue-600 dark:text-blue-400">{manga.status}</span>
+              <span className="text-blue-600 dark:text-blue-400">{webtoon.status}</span>
             </div>
 
             <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-6">
-              {manga.tags.map((tag: string) => (
+              {webtoon.tags.map((tag: string) => (
                 <span key={tag} className="px-3 py-1 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 rounded-full text-xs font-medium border border-slate-200 dark:border-zinc-700 shadow-sm transition-colors">
                   {tag}
                 </span>
@@ -336,24 +348,30 @@ export default function MangaDetailPage() {
             </div>
 
             <p className="text-slate-600 dark:text-zinc-300 leading-relaxed mb-8 max-w-3xl line-clamp-4 md:line-clamp-none text-sm md:text-base">
-              {manga.description}
+              {webtoon.description}
             </p>
 
             <div className="flex flex-wrap gap-4 justify-center md:justify-start mt-8">
-              <Link href={`/manga/${manga.id}/chapter/${manga.chapters[0]?.id || ''}`} className="btn-primary flex items-center justify-center gap-2 px-8 py-3 text-lg flex-1 md:flex-none">
-                <Play size={20} className="fill-current" /> {t('manga.start_reading')}
-              </Link>
+              {readHistory ? (
+                <Link href={`/webtoon/${webtoon.id}/chapter/${readHistory.chapterId}`} className="btn-primary flex items-center justify-center gap-2 px-8 py-3 text-lg flex-1 md:flex-none">
+                  <Play size={20} className="fill-current" /> อ่านต่อตอนที่ {readHistory.number}
+                </Link>
+              ) : (
+                <Link href={`/webtoon/${webtoon.id}/chapter/${webtoon.chapters[0]?.id || ''}`} className="btn-primary flex items-center justify-center gap-2 px-8 py-3 text-lg flex-1 md:flex-none">
+                  <Play size={20} className="fill-current" /> {t('webtoon.start_reading')}
+                </Link>
+              )}
               <button 
                 onClick={handleToggleSave}
                 disabled={isSaving}
                 className={`flex items-center justify-center gap-2 px-6 py-3 rounded-full font-bold transition-all border ${
                   localIsSaved 
-                    ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-500/30' 
+                    ? 'bg-pink-50 dark:bg-pink-500/10 text-pink-600 dark:text-pink-400 border-pink-200 dark:border-pink-500/30' 
                     : 'bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700'
                 }`}
               >
-                <Bookmark size={20} className={localIsSaved ? "fill-current" : ""} /> 
-                {isSaving ? 'กำลังโหลด...' : localIsSaved ? 'บันทึกแล้ว' : 'บันทึกเรื่อง'}
+                <Heart size={20} className={localIsSaved ? "fill-current" : ""} /> 
+                {isSaving ? 'กำลังโหลด...' : localIsSaved ? 'บันทึกแล้ว' : 'บันทึกเรื่องโปรด'}
               </button>
             </div>
           </div>
@@ -363,12 +381,12 @@ export default function MangaDetailPage() {
         <div className="mt-16">
           <div className="flex items-center gap-2 mb-6 border-b border-slate-200 dark:border-zinc-800 pb-4 transition-colors">
             <List className="text-blue-600 dark:text-blue-500" />
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('manga.chapter_list')}</h2>
-            <span className="text-slate-500 dark:text-zinc-500 text-sm ml-2">{t('manga.total')} {manga.chapters.length} {t('manga.chapters')}</span>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t('webtoon.chapter_list')}</h2>
+            <span className="text-slate-500 dark:text-zinc-500 text-sm ml-2">{t('webtoon.total')} {webtoon.chapters.length} {t('webtoon.chapters')}</span>
           </div>
 
           <div className="grid gap-3">
-            {manga.chapters.map((chapter: Chapter) => (
+            {webtoon.chapters.map((chapter: Chapter) => (
               <button 
                 key={chapter.id} 
                 onClick={() => handleChapterClick(chapter)}
@@ -376,7 +394,7 @@ export default function MangaDetailPage() {
               >
                 <div className="flex flex-col">
                   <span className="text-slate-900 dark:text-white font-medium text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                    {t('manga.chapter_prefix')} {chapter.number} {chapter.title}
+                    {t('webtoon.chapter_prefix')} {chapter.number} {chapter.title}
                   </span>
                   <span className="text-slate-500 dark:text-zinc-500 text-sm flex items-center gap-1 mt-1">
                     <Clock size={14} /> {chapter.date}
@@ -386,7 +404,7 @@ export default function MangaDetailPage() {
                 <div>
                   {chapter.isLocked ? (
                     <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-50 dark:bg-zinc-800 text-yellow-600 dark:text-yellow-500 rounded-full text-sm font-bold border border-yellow-200 dark:border-yellow-500/30 transition-colors">
-                      🪙 {chapter.price} {t('manga.coins')}
+                      🪙 {chapter.price} {t('webtoon.coins')}
                     </span>
                   ) : chapter.hasUnlocked ? (
                     <span className="inline-block px-3 py-1 bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 rounded-full text-sm font-bold border border-green-200 dark:border-green-500/20 transition-colors">
@@ -394,7 +412,7 @@ export default function MangaDetailPage() {
                     </span>
                   ) : (
                     <span className="inline-block px-3 py-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-full text-sm font-bold border border-blue-200 dark:border-blue-500/20 transition-colors">
-                      {t('manga.free')}
+                      {t('webtoon.free')}
                     </span>
                   )}
                 </div>
@@ -404,7 +422,7 @@ export default function MangaDetailPage() {
         </div>
 
         {/* Comment Section */}
-        <CommentSection mangaId={manga.id} />
+        <CommentSection webtoonId={webtoon.id} />
       </div>
     </div>
   );

@@ -25,8 +25,8 @@ func GetUserProfile(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"data": userData})
 }
 
-// GetSavedMangas returns the list of mangas saved by the user
-func GetSavedMangas(c *fiber.Ctx) error {
+// GetSavedWebtoons returns the list of webtoons saved by the user
+func GetSavedWebtoons(c *fiber.Ctx) error {
 	uid := c.Locals("uid").(string)
 
 	client := config.FirestoreClient
@@ -37,28 +37,28 @@ func GetSavedMangas(c *fiber.Ctx) error {
 	}
 
 	userData := doc.Data()
-	var savedMangas []interface{}
-	if sm, ok := userData["savedMangas"].([]interface{}); ok {
-		savedMangas = sm
+	var savedWebtoons []interface{}
+	if sm, ok := userData["savedWebtoons"].([]interface{}); ok {
+		savedWebtoons = sm
 	}
 
-	var mangas []map[string]interface{}
-	if len(savedMangas) > 0 {
+	var webtoons []map[string]interface{}
+	if len(savedWebtoons) > 0 {
 		var docRefs []*firestore.DocumentRef
-		for _, mangaIdInterface := range savedMangas {
-			if mangaId, ok := mangaIdInterface.(string); ok {
-				docRefs = append(docRefs, client.Collection("mangas").Doc(mangaId))
+		for _, webtoonIdInterface := range savedWebtoons {
+			if webtoonId, ok := webtoonIdInterface.(string); ok {
+				docRefs = append(docRefs, client.Collection("webtoons").Doc(webtoonId))
 			}
 		}
 
 		if len(docRefs) > 0 {
 			docs, err := client.GetAll(context.Background(), docRefs)
 			if err == nil {
-				for _, mangaDoc := range docs {
-					if mangaDoc.Exists() {
-						data := mangaDoc.Data()
-						data["id"] = mangaDoc.Ref.ID
-						mangas = append(mangas, data)
+				for _, webtoonDoc := range docs {
+					if webtoonDoc.Exists() {
+						data := webtoonDoc.Data()
+						data["id"] = webtoonDoc.Ref.ID
+						webtoons = append(webtoons, data)
 					}
 				}
 			}
@@ -66,11 +66,11 @@ func GetSavedMangas(c *fiber.Ctx) error {
 	}
 
 	// Initialize empty slice if null
-	if mangas == nil {
-		mangas = []map[string]interface{}{}
+	if webtoons == nil {
+		webtoons = []map[string]interface{}{}
 	}
 
-	return c.JSON(fiber.Map{"success": true, "data": mangas})
+	return c.JSON(fiber.Map{"success": true, "data": webtoons})
 }
 
 // GetCustomToken generates a Firebase custom token for seamless cross-origin auth

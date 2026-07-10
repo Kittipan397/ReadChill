@@ -10,7 +10,7 @@ import { useLanguage } from "@/context/LanguageContext";
 
 interface Comment {
   id: string;
-  mangaId: string;
+  webtoonId: string;
   userId: string;
   userName: string;
   userAvatar: string;
@@ -28,7 +28,7 @@ interface InventoryItem {
   imageUrls: string[];
 }
 
-export default function CommentSection({ mangaId }: { mangaId: string }) {
+export default function CommentSection({ webtoonId }: { webtoonId: string }) {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [comments, setComments] = useState<Comment[]>([]);
@@ -47,8 +47,8 @@ export default function CommentSection({ mangaId }: { mangaId: string }) {
   useEffect(() => {
     // 1. Fetch Comments
     const q = query(
-      collection(db, "manga_comments"),
-      where("mangaId", "==", mangaId)
+      collection(db, "webtoon_comments"),
+      where("webtoonId", "==", webtoonId)
     );
     const unsub = onSnapshot(q, (snap) => {
       const rawComments = snap.docs.map(d => ({ id: d.id, ...d.data() } as Comment));
@@ -64,7 +64,7 @@ export default function CommentSection({ mangaId }: { mangaId: string }) {
     });
 
     return () => unsub();
-  }, [mangaId]);
+  }, [webtoonId]);
 
   useEffect(() => {
     // 2. Fetch User's Sticker Packs
@@ -88,8 +88,8 @@ export default function CommentSection({ mangaId }: { mangaId: string }) {
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const activeFrame = userDoc.exists() ? userDoc.data().activeFrame : null;
 
-      await addDoc(collection(db, "manga_comments"), {
-        mangaId,
+      await addDoc(collection(db, "webtoon_comments"), {
+        webtoonId,
         userId: user.uid,
         userName: user.displayName || t('comments.default_user'),
         userAvatar: user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`,
@@ -111,7 +111,7 @@ export default function CommentSection({ mangaId }: { mangaId: string }) {
   const handleDelete = async (commentId: string) => {
     if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบคอมเมนต์นี้?")) {
       try {
-        await deleteDoc(doc(db, "manga_comments", commentId));
+        await deleteDoc(doc(db, "webtoon_comments", commentId));
       } catch (err: any) {
         alert(`Error: ${err.message || err}`);
       }
@@ -121,7 +121,7 @@ export default function CommentSection({ mangaId }: { mangaId: string }) {
   const handleEditSave = async (commentId: string) => {
     if (!editTextContent.trim()) return;
     try {
-      await updateDoc(doc(db, "manga_comments", commentId), {
+      await updateDoc(doc(db, "webtoon_comments", commentId), {
         text: editTextContent.trim()
       });
       setEditingId(null);

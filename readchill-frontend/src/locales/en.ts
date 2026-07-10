@@ -30,20 +30,20 @@ export const en: Translations = {
   // Home
   home: {
     update_daily: "New chapters daily!",
-    hero_title_1: "Read your favorite manga",
+    hero_title_1: "Read your favorite webtoon",
     hero_title_2: "without interruptions at ReadChill",
-    hero_desc: "The ultimate source for manga, novels, and high-quality comics. Read for free anywhere, anytime with fast loading and premium experience.",
+    hero_desc: "The ultimate source for webtoon, novels, and high-quality comics. Read for free anywhere, anytime with fast loading and premium experience.",
     start_reading: "Start Reading",
     topup: "Top Up",
-    new_update: "Recently Updated Manga (Live API Data)",
+    new_update: "Recently Updated Webtoon (Live API Data)",
     view_all: "View All",
-    no_data: "No manga found from the backend system"
+    no_data: "No webtoon found from the backend system"
   },
   
   // Auth
   auth: {
     welcome_back: "Welcome Back",
-    login_desc: "Log in to continue reading your favorite manga",
+    login_desc: "Log in to continue reading your favorite webtoon",
     email: "Email",
     password: "Password",
     forgot_password: "Forgot Password?",
@@ -107,15 +107,15 @@ export const en: Translations = {
   // Library
   library: {
     title: "My Library",
-    desc: "Manage your reading history and favorite manga",
+    desc: "Manage your reading history and favorite webtoon",
     tab_history: "Reading History",
-    tab_saved: "Saved Manga",
+    tab_saved: "Saved Webtoon",
     tab_unlocked: "Unlocked Chapters",
     read_progress: "Read {percent}%",
-    no_saved: "No saved manga yet",
-    no_saved_desc: "Find manga you like and bookmark them to read later",
+    no_saved: "No saved webtoon yet",
+    no_saved_desc: "Find webtoon you like and bookmark them to read later",
     go_read: "Let's go read",
-    col_title: "Manga / Chapter",
+    col_title: "Webtoon / Chapter",
     col_price: "Price Paid",
     col_date: "Date Unlocked",
     col_action: "Action",
@@ -190,7 +190,7 @@ export const en: Translations = {
     penname_placeholder: "The pen name you want to use",
     type_label: "Primary Work Type",
     type_novel: "Novel",
-    type_comic: "Comic",
+    type_comic: "Webtoon",
     type_art: "Art",
     contact_label: "Contact Info (Facebook Page, Twitter, Line)",
     contact_placeholder: "e.g., Facebook: MyPage or Line ID",
@@ -201,8 +201,8 @@ export const en: Translations = {
     submit_btn: "Submit Creator Request"
   },
   
-  // Manga Details
-  manga: {
+  // Webtoon Details
+  webtoon: {
     author: "Author:",
     start_reading: "Start Reading",
     chapter_list: "Chapters",
@@ -253,11 +253,11 @@ export const en: Translations = {
   // Search
   search: {
     title: "Search",
-    desc: "Search for your favorite manga, novels, or authors",
+    desc: "Search for your favorite webtoon, novels, or authors",
     placeholder_title: "Title or Chapter...",
     placeholder_author: "Author name...",
     type_all: "All",
-    type_comic: "Comic",
+    type_comic: "Webtoon",
     type_novel: "Novel",
     type_art: "Art",
     genres: "Genres (Multi-select)",

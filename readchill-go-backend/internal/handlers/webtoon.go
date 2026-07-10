@@ -12,9 +12,9 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-// GetMangas returns mangas with pagination and type filtering
-func GetMangas(c *fiber.Ctx) error {
-	mangaType := c.Query("type", "")
+// GetWebtoons returns webtoons with pagination and type filtering
+func GetWebtoons(c *fiber.Ctx) error {
+	webtoonType := c.Query("type", "")
 	page := c.QueryInt("page", 1)
 	limit := c.QueryInt("limit", 24)
 
@@ -25,24 +25,26 @@ func GetMangas(c *fiber.Ctx) error {
 		limit = 24
 	}
 
-	cacheKeyData := fmt.Sprintf("mangas_data_type_%s_page_%d_limit_%d", mangaType, page, limit)
+	cacheKeyData := fmt.Sprintf("webtoons_data_type_%s_page_%d_limit_%d", webtoonType, page, limit)
 	
 	client := config.FirestoreClient
-	var mangas []map[string]interface{}
+	var webtoons []map[string]interface{}
 	
 	// Try Redis Cache for data
 	if config.RedisClient != nil {
-		if val, err := config.RedisClient.Get(context.Background(), cacheKeyData).Result(); err == nil {
-			if json.Unmarshal([]byte(val), &mangas) == nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		if val, err := config.RedisClient.Get(ctx, cacheKeyData).Result(); err == nil {
+			cancel()
+			if json.Unmarshal([]byte(val), &webtoons) == nil {
 				// We also need total count. Let's just fetch it from cache or DB separately.
 			}
 		}
 	}
 
-	if mangas == nil {
-		query := client.Collection("mangas").OrderBy("createdAt", firestore.Desc)
-		if mangaType != "" {
-			query = query.Where("type", "==", mangaType)
+	if webtoons == nil {
+		query := client.Collection("webtoons").OrderBy("createdAt", firestore.Desc)
+		if webtoonType != "" {
+			query = query.Where("type", "==", webtoonType)
 		}
 		
 		offset := (page - 1) * limit
@@ -59,42 +61,44 @@ func GetMangas(c *fiber.Ctx) error {
 			
 			data := doc.Data()
 			data["id"] = doc.Ref.ID
-			mangas = append(mangas, data)
+			webtoons = append(webtoons, data)
 		}
 		
-		if mangas == nil {
-			mangas = []map[string]interface{}{}
+		if webtoons == nil {
+			webtoons = []map[string]interface{}{}
 		}
 
 		if config.RedisClient != nil {
-			if cacheBytes, err := json.Marshal(mangas); err == nil {
-				config.RedisClient.Set(context.Background(), cacheKeyData, cacheBytes, 5*time.Minute)
+			if cacheBytes, err := json.Marshal(webtoons); err == nil {
+				ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+				config.RedisClient.Set(ctx, cacheKeyData, cacheBytes, 5*time.Minute)
+				cancel()
 			}
 		}
 	}
 
 	return c.JSON(fiber.Map{
 		"success": true, 
-		"data": mangas,
+		"data": webtoons,
 	})
 }
 
-// GetMangaDetail returns a manga and its chapters
-func GetMangaDetail(c *fiber.Ctx) error {
+// GetWebtoonDetail returns a webtoon and its chapters
+func GetWebtoonDetail(c *fiber.Ctx) error {
 	id := c.Params("id")
 	
 	client := config.FirestoreClient
 
-	doc, err := client.Collection("mangas").Doc(id).Get(context.Background())
+	doc, err := client.Collection("webtoons").Doc(id).Get(context.Background())
 	if err != nil || !doc.Exists() {
-		return c.Status(404).JSON(fiber.Map{"success": false, "error": "Manga not found"})
+		return c.Status(404).JSON(fiber.Map{"success": false, "error": "Webtoon not found"})
 	}
 
-	mangaData := doc.Data()
-	mangaData["id"] = doc.Ref.ID
+	webtoonData := doc.Data()
+	webtoonData["id"] = doc.Ref.ID
 
 	// Fetch chapters
-	iter := client.Collection("mangas").Doc(id).Collection("chapters").OrderBy("number", 1).Documents(context.Background()) // 1 = Ascending
+	iter := client.Collection("webtoons").Doc(id).Collection("chapters").OrderBy("number", 1).Documents(context.Background()) // 1 = Ascending
 	var chapters []map[string]interface{}
 	
 	for {
@@ -110,9 +114,9 @@ func GetMangaDetail(c *fiber.Ctx) error {
 		chapters = append(chapters, cData)
 	}
 
-	mangaData["chapters"] = chapters
+	webtoonData["chapters"] = chapters
 
-	return c.JSON(fiber.Map{"success": true, "data": mangaData})
+	return c.JSON(fiber.Map{"success": true, "data": webtoonData})
 }
 
 // GetChapter returns reader images for a specific chapter
@@ -122,7 +126,7 @@ func GetChapter(c *fiber.Ctx) error {
 	
 	client := config.FirestoreClient
 
-	doc, err := client.Collection("mangas").Doc(id).Collection("chapters").Doc(chapterId).Get(context.Background())
+	doc, err := client.Collection("webtoons").Doc(id).Collection("chapters").Doc(chapterId).Get(context.Background())
 	if err != nil || !doc.Exists() {
 		return c.Status(404).JSON(fiber.Map{"success": false, "error": "Chapter not found"})
 	}
@@ -133,10 +137,10 @@ func GetChapter(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
-// ToggleSaveManga adds or removes a manga from the user's savedMangas list
-func ToggleSaveManga(c *fiber.Ctx) error {
+// ToggleSaveWebtoon adds or removes a webtoon from the user's savedWebtoons list
+func ToggleSaveWebtoon(c *fiber.Ctx) error {
 	uid := c.Locals("uid").(string)
-	mangaId := c.Params("id")
+	webtoonId := c.Params("id")
 
 	client := config.FirestoreClient
 
@@ -148,24 +152,24 @@ func ToggleSaveManga(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"success": false, "error": "Failed to read user data"})
 	}
 
-	var savedMangas []interface{}
+	var savedWebtoons []interface{}
 	if docSnap.Exists() {
 		data := docSnap.Data()
-		if sm, ok := data["savedMangas"].([]interface{}); ok {
-			savedMangas = sm
+		if sm, ok := data["savedWebtoons"].([]interface{}); ok {
+			savedWebtoons = sm
 		}
 	} else {
 		// Create the document if it doesn't exist
 		_, _ = userRef.Set(context.Background(), map[string]interface{}{
-			"savedMangas": []interface{}{},
+			"savedWebtoons": []interface{}{},
 		})
 	}
 
 	// Check if already saved
 	isSaved := false
 	var updatedSaved []interface{}
-	for _, id := range savedMangas {
-		if id.(string) == mangaId {
+	for _, id := range savedWebtoons {
+		if id.(string) == webtoonId {
 			isSaved = true
 		} else {
 			updatedSaved = append(updatedSaved, id)
@@ -175,27 +179,27 @@ func ToggleSaveManga(c *fiber.Ctx) error {
 	if isSaved {
 		// Remove it
 		_, err = userRef.Update(context.Background(), []firestore.Update{
-			{Path: "savedMangas", Value: updatedSaved},
+			{Path: "savedWebtoons", Value: updatedSaved},
 		})
 		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"success": false, "error": "Failed to unsave manga"})
+			return c.Status(500).JSON(fiber.Map{"success": false, "error": "Failed to unsave webtoon"})
 		}
-		return c.JSON(fiber.Map{"success": true, "message": "Manga unsaved", "isSaved": false})
+		return c.JSON(fiber.Map{"success": true, "message": "Webtoon unsaved", "isSaved": false})
 	} else {
 		// Add it
-		updatedSaved = append(updatedSaved, mangaId)
+		updatedSaved = append(updatedSaved, webtoonId)
 		_, err = userRef.Update(context.Background(), []firestore.Update{
-			{Path: "savedMangas", Value: updatedSaved},
+			{Path: "savedWebtoons", Value: updatedSaved},
 		})
 		if err != nil {
 			// If Update fails because doc is newly created without the field properly initialized by Set, use Set with Merge
 			_, err = userRef.Set(context.Background(), map[string]interface{}{
-				"savedMangas": updatedSaved,
+				"savedWebtoons": updatedSaved,
 			}, firestore.MergeAll)
 			if err != nil {
-				return c.Status(500).JSON(fiber.Map{"success": false, "error": "Failed to save manga"})
+				return c.Status(500).JSON(fiber.Map{"success": false, "error": "Failed to save webtoon"})
 			}
 		}
-		return c.JSON(fiber.Map{"success": true, "message": "Manga saved", "isSaved": true})
+		return c.JSON(fiber.Map{"success": true, "message": "Webtoon saved", "isSaved": true})
 	}
 }

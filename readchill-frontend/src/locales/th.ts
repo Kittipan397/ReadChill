@@ -33,9 +33,9 @@ export const th = {
     hero_desc: "แหล่งรวมมังงะ นิยาย และคอมมิคคุณภาพ อ่านฟรี ไม่มีสะดุด พร้อมระบบสนับสนุนผลงานจากนักวาดที่คุณชื่นชอบโดยตรง",
     start_reading: "เริ่มอ่านเลย",
     topup: "เติมเหรียญ",
-    new_update: "มังงะอัปเดตใหม่ (ข้อมูลจริงจาก API)",
+    new_update: "Webtoon อัปเดตใหม่",
     view_all: "ดูทั้งหมด",
-    no_data: "ไม่พบข้อมูลการ์ตูนจากระบบ Backend"
+    no_data: "ไม่พบข้อมูลจากระบบ Backend"
   },
   
   // Auth
@@ -199,8 +199,8 @@ export const th = {
     submit_btn: "ส่งคำขอเป็นนักเขียน"
   },
   
-  // Manga Details
-  manga: {
+  // Webtoon Details
+  webtoon: {
     author: "ผู้แต่ง:",
     start_reading: "เริ่มอ่านเลย",
     chapter_list: "รายชื่อตอน",
@@ -255,7 +255,7 @@ export const th = {
     placeholder_title: "ชื่อเรื่อง หรือ ตอน...",
     placeholder_author: "นามปากกา...",
     type_all: "ทั้งหมด",
-    type_comic: "การ์ตูน (Comic)",
+    type_comic: "เว็บตูน (Webtoon)",
     type_novel: "นิยาย (Novel)",
     type_art: "ภาพวาด (Art)",
     genres: "หมวดหมู่ (เลือกได้หลายอัน)",

@@ -205,8 +205,23 @@ export default function ShopPage() {
                     </div>
                   )}
 
-                  <div className="aspect-square bg-slate-50 dark:bg-zinc-950 rounded-xl mb-3 overflow-hidden border border-slate-100 dark:border-zinc-800/50 relative flex items-center justify-center p-2">
-                    <img src={item.coverUrl} alt={item.name} className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300" />
+                  <div className="aspect-square bg-slate-50 dark:bg-zinc-950 rounded-xl mb-3 overflow-hidden border border-slate-100 dark:border-zinc-800/50 relative flex items-center justify-center p-4">
+                    {item.type === 'frame' ? (
+                      <div className="relative w-20 h-20 sm:w-24 sm:h-24 group-hover:scale-110 transition-transform duration-300">
+                        {/* Profile Picture */}
+                        <img 
+                          src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=1a90ff&color=fff`} 
+                          alt="Profile" 
+                          className="w-full h-full rounded-full object-cover z-0"
+                        />
+                        {/* Frame Overlay */}
+                        <div className="absolute -inset-2 z-10 pointer-events-none mix-blend-screen">
+                          <img src={item.coverUrl} alt={item.name} className="w-full h-full object-contain scale-110" />
+                        </div>
+                      </div>
+                    ) : (
+                      <img src={item.coverUrl} alt={item.name} className="max-w-full max-h-full object-contain group-hover:scale-110 transition-transform duration-300" />
+                    )}
                   </div>
                   
                   <div className="flex-1 mt-2">

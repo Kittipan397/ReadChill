@@ -202,7 +202,7 @@ func SubmitSlip(c *fiber.Ctx) error {
 }
 
 type PurchaseChapterReq struct {
-	MangaId   string `json:"mangaId"`
+	WebtoonId   string `json:"webtoonId"`
 	ChapterId string `json:"chapterId"`
 	Price     int    `json:"price"`
 }
@@ -215,14 +215,14 @@ func PurchaseChapter(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid request body"})
 	}
 
-	if req.MangaId == "" || req.ChapterId == "" {
+	if req.WebtoonId == "" || req.ChapterId == "" {
 		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Missing required fields"})
 	}
 
 	client := config.FirestoreClient
 	ctx := context.Background()
 	userRef := client.Collection("users").Doc(uid)
-	chapterStr := fmt.Sprintf("%s_%s", req.MangaId, req.ChapterId)
+	chapterStr := fmt.Sprintf("%s_%s", req.WebtoonId, req.ChapterId)
 
 	err := client.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
 		// Read user data
@@ -244,7 +244,7 @@ func PurchaseChapter(c *fiber.Ctx) error {
 		}
 
 		// Fetch real chapter price from Firestore
-		chapterDoc, err := tx.Get(client.Collection("mangas").Doc(req.MangaId).Collection("chapters").Doc(req.ChapterId))
+		chapterDoc, err := tx.Get(client.Collection("webtoons").Doc(req.WebtoonId).Collection("chapters").Doc(req.ChapterId))
 		if err != nil {
 			return fmt.Errorf("CHAPTER_NOT_FOUND")
 		}
@@ -289,7 +289,7 @@ func PurchaseChapter(c *fiber.Ctx) error {
 		purchaseRef := client.Collection("purchases").NewDoc()
 		return tx.Set(purchaseRef, map[string]interface{}{
 			"userId":    uid,
-			"mangaId":   req.MangaId,
+			"webtoonId":   req.WebtoonId,
 			"chapterId": req.ChapterId,
 			"price":     realPrice,
 			"createdAt": firestore.ServerTimestamp,
@@ -319,7 +319,7 @@ func PurchaseChapter(c *fiber.Ctx) error {
 }
 
 type DonateReq struct {
-	MangaId   string `json:"mangaId"`
+	WebtoonId   string `json:"webtoonId"`
 	ChapterId string `json:"chapterId"`
 	Amount    int    `json:"amount"`
 }
@@ -332,7 +332,7 @@ func DonateToCreator(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid request body"})
 	}
 
-	if req.MangaId == "" || req.Amount <= 0 {
+	if req.WebtoonId == "" || req.Amount <= 0 {
 		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid donation parameters"})
 	}
 
@@ -371,7 +371,7 @@ func DonateToCreator(c *fiber.Ctx) error {
 		return tx.Set(donationRef, map[string]interface{}{
 			"userId":    uid,
 			"userName":  userName,
-			"mangaId":   req.MangaId,
+			"webtoonId":   req.WebtoonId,
 			"chapterId": req.ChapterId,
 			"amount":    req.Amount,
 			"createdAt": firestore.ServerTimestamp,

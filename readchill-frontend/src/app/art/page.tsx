@@ -6,14 +6,14 @@ import Pagination from '@/components/ui/Pagination';
 import T from '@/components/ui/T';
 import HeroSection from '@/components/home/HeroSection';
 
-async function getMangas(page: number, limit: number, type: string) {
+async function getWebtoons(page: number, limit: number, type: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/mangas?page=${page}&limit=${limit}&type=${type}`, { cache: 'no-store' });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/webtoons?page=${page}&limit=${limit}&type=${type}`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch data');
     const json = await res.json();
     return json.data || [];
   } catch (error) {
-    console.error('Error fetching mangas:', error);
+    console.error('Error fetching webtoons:', error);
     return [];
   }
 }
@@ -23,8 +23,8 @@ export default async function ArtPage({ searchParams }: { searchParams: { page?:
   const params = await searchParams;
   const currentPage = parseInt(params.page || '1');
   
-  const displayMangas = await getMangas(currentPage, ITEMS_PER_PAGE, "art");
-  const hasNextPage = displayMangas.length === ITEMS_PER_PAGE;
+  const displayWebtoons = await getWebtoons(currentPage, ITEMS_PER_PAGE, "art");
+  const hasNextPage = displayWebtoons.length === ITEMS_PER_PAGE;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-white transition-colors">
@@ -56,8 +56,8 @@ export default async function ArtPage({ searchParams }: { searchParams: { page?:
           </div>
 
           <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-            {displayMangas.length > 0 ? (
-              displayMangas.map((art: any) => (
+            {displayWebtoons.length > 0 ? (
+              displayWebtoons.map((art: any) => (
                 <Link href={`/art/${art.id}`} key={art.id} className="block group relative rounded-2xl overflow-hidden bg-slate-200 dark:bg-zinc-800 break-inside-avoid shadow-sm hover:shadow-xl transition-all hover:-translate-y-1">
                   <Image 
                     src={art.coverUrl} 

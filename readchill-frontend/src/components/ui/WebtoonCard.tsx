@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Eye, Star } from 'lucide-react';
+import { useState } from 'react';
 
-interface MangaCardProps {
+interface WebtoonCardProps {
   id: string;
   title: string;
   coverUrl: string;
@@ -14,7 +15,9 @@ interface MangaCardProps {
   type?: string;
 }
 
-export default function MangaCard({ id, title, coverUrl, views, rating, isNew, type }: MangaCardProps) {
+export default function WebtoonCard({ id, title, coverUrl, views, rating, isNew, type }: WebtoonCardProps) {
+  const [isLoaded, setIsLoaded] = useState(false);
+
   // Format views to 'K' or 'M'
   const formatViews = (num: number) => {
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
@@ -22,7 +25,7 @@ export default function MangaCard({ id, title, coverUrl, views, rating, isNew, t
     return num.toString();
   };
 
-  const routeType = type === 'art' ? 'art' : type === 'novel' ? 'novel' : 'manga';
+  const routeType = type === 'art' ? 'art' : type === 'novel' ? 'novel' : 'webtoon';
 
   return (
     <Link href={`/${routeType}/${id}`} className="block group">
@@ -33,17 +36,19 @@ export default function MangaCard({ id, title, coverUrl, views, rating, isNew, t
           alt={title}
           fill
           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 20vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className={`object-cover transition-all duration-700 group-hover:scale-105 ${isLoaded ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'}`}
+          onLoad={() => setIsLoaded(true)}
           /* Anti-copy measures */
           onDragStart={(e) => e.preventDefault()}
           onContextMenu={(e) => e.preventDefault()}
           priority={false}
+          loading="lazy"
         />
         
         {/* New Badge */}
         {isNew && (
-          <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg z-10">
-            NEW
+          <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded shadow-lg shadow-red-600/30 z-10 animate-pulse">
+            ตอนใหม่
           </div>
         )}
 

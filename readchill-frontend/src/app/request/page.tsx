@@ -184,8 +184,8 @@ export default function RequestPage() {
                     <input type="radio" name="workType" value="novel" checked={formData.workType === 'novel'} onChange={handleChange} className="hidden" />
                     <PenTool size={18} /> {t('request.type_novel')}
                   </label>
-                  <label className={`flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-colors ${formData.workType === 'comic' ? 'bg-blue-50 dark:bg-blue-500/20 border-blue-500 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-zinc-950 border-slate-300 dark:border-zinc-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500'}`}>
-                    <input type="radio" name="workType" value="comic" checked={formData.workType === 'comic'} onChange={handleChange} className="hidden" />
+                  <label className={`flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-colors ${formData.workType === 'webtoon' ? 'bg-blue-50 dark:bg-blue-500/20 border-blue-500 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-zinc-950 border-slate-300 dark:border-zinc-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500'}`}>
+                    <input type="radio" name="workType" value="webtoon" checked={formData.workType === 'webtoon'} onChange={handleChange} className="hidden" />
                     <ImageIcon size={18} /> {t('request.type_comic')}
                   </label>
                   <label className={`flex items-center justify-center gap-2 p-3 rounded-xl border cursor-pointer transition-colors ${formData.workType === 'art' ? 'bg-blue-50 dark:bg-blue-500/20 border-blue-500 text-blue-600 dark:text-blue-400' : 'bg-white dark:bg-zinc-950 border-slate-300 dark:border-zinc-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-slate-500'}`}>

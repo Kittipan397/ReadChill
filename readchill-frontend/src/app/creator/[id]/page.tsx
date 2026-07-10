@@ -15,7 +15,7 @@ export default function CreatorProfilePage() {
   const [creator, setCreator] = useState<any>(null);
   const [works, setWorks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'comics' | 'art'>('comics');
+  const [activeTab, setActiveTab] = useState<'webtoons' | 'art'>('webtoons');
 
   useEffect(() => {
     const fetchCreatorData = async () => {
@@ -27,7 +27,7 @@ export default function CreatorProfilePage() {
         }
 
         // Fetch Creator Works
-        const q = query(collection(db, 'mangas'), where('authorId', '==', id));
+        const q = query(collection(db, 'webtoons'), where('authorId', '==', id));
         const querySnapshot = await getDocs(q);
         const worksData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
@@ -147,11 +147,11 @@ export default function CreatorProfilePage() {
             
             <div className="flex gap-4 mb-6 border-b border-slate-200 dark:border-white/5 pb-4">
               <button 
-                onClick={() => setActiveTab('comics')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-colors ${activeTab === 'comics' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'}`}
+                onClick={() => setActiveTab('webtoons')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-colors ${activeTab === 'webtoons' ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5'}`}
               >
                 <BookOpen size={18} />
-                ซีรีส์ / นิยาย ({comics.length})
+                เว็บตูน / นิยาย ({comics.length})
               </button>
               <button 
                 onClick={() => setActiveTab('art')}
@@ -162,23 +162,23 @@ export default function CreatorProfilePage() {
               </button>
             </div>
 
-            {activeTab === 'comics' && (
+            {activeTab === 'webtoons' && (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {comics.length === 0 ? (
                   <div className="col-span-full py-12 text-center text-slate-500">ไม่มีผลงาน</div>
                 ) : (
-                  comics.map(manga => (
-                    <Link href={`/manga/${manga.id}`} key={manga.id} className="group flex flex-col gap-3">
+                  comics.map(webtoon => (
+                    <Link href={`/webtoon/${webtoon.id}`} key={webtoon.id} className="group flex flex-col gap-3">
                       <div className="relative aspect-[2/3] rounded-2xl overflow-hidden bg-slate-200 dark:bg-zinc-800 shadow-md group-hover:shadow-xl transition-all group-hover:-translate-y-1">
-                        <Image src={manga.coverUrl} alt={manga.title} fill className="object-cover transition-transform duration-500 group-hover:scale-110" unoptimized />
+                        <Image src={webtoon.coverUrl} alt={webtoon.title} fill className="object-cover transition-transform duration-500 group-hover:scale-110" unoptimized />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-                          <span className="text-white text-xs font-bold flex items-center gap-1"><Star size={12} className="fill-yellow-500 text-yellow-500"/> {manga.rating || '0.0'}</span>
+                          <span className="text-white text-xs font-bold flex items-center gap-1"><Star size={12} className="fill-yellow-500 text-yellow-500"/> {webtoon.rating || '0.0'}</span>
                         </div>
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-blue-500 transition-colors">{manga.title}</h3>
+                        <h3 className="font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-blue-500 transition-colors">{webtoon.title}</h3>
                         <div className="flex items-center gap-3 text-xs text-slate-500 font-medium mt-1">
-                          <span className="flex items-center gap-1"><Eye size={12} /> {manga.views || 0}</span>
+                          <span className="flex items-center gap-1"><Eye size={12} /> {webtoon.views || 0}</span>
                         </div>
                       </div>
                     </Link>
