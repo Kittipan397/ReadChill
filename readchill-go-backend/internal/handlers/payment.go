@@ -248,6 +248,28 @@ func PurchaseChapter(c *fiber.Ctx) error {
 		if err != nil {
 			return fmt.Errorf("CHAPTER_NOT_FOUND")
 		}
+
+		// Fetch webtoon to get authorId and revenueShare
+		webtoonDoc, err := tx.Get(client.Collection("webtoons").Doc(req.WebtoonId))
+		if err != nil {
+			return fmt.Errorf("WEBTOON_NOT_FOUND")
+		}
+		
+		authorIdVal, _ := webtoonDoc.DataAt("authorId")
+		authorId := ""
+		if aId, ok := authorIdVal.(string); ok {
+			authorId = aId
+		}
+		
+		revenueShareVal, err := webtoonDoc.DataAt("revenueShare")
+		revenueShare := int64(73)
+		if err == nil {
+			switch r := revenueShareVal.(type) {
+			case int64: revenueShare = r
+			case float64: revenueShare = int64(r)
+			case int: revenueShare = int64(r)
+			}
+		}
 		
 		chapterCoins, _ := chapterDoc.DataAt("coins")
 		realPrice := int64(0)
@@ -285,6 +307,21 @@ func PurchaseChapter(c *fiber.Ctx) error {
 			return err
 		}
 
+		// Calculate Shares
+		partnerShare := (realPrice * revenueShare) / 100
+		platformShare := realPrice - partnerShare
+
+		// Update partner's revenueBalance
+		if authorId != "" {
+			partnerRef := client.Collection("users").Doc(authorId)
+			err = tx.Set(partnerRef, map[string]interface{}{
+				"revenueBalance": firestore.Increment(partnerShare),
+			}, firestore.MergeAll)
+			if err != nil {
+				return err
+			}
+		}
+
 		// Record purchase
 		purchaseRef := client.Collection("purchases").NewDoc()
 		return tx.Set(purchaseRef, map[string]interface{}{
@@ -292,6 +329,10 @@ func PurchaseChapter(c *fiber.Ctx) error {
 			"webtoonId":   req.WebtoonId,
 			"chapterId": req.ChapterId,
 			"price":     realPrice,
+			"partnerId": authorId,
+			"partnerShare": partnerShare,
+			"platformShare": platformShare,
+			"revenueShareRate": revenueShare,
 			"createdAt": firestore.ServerTimestamp,
 		})
 	})
@@ -346,6 +387,28 @@ func DonateToCreator(c *fiber.Ctx) error {
 			return err
 		}
 
+		// Fetch webtoon to get authorId and revenueShare
+		webtoonDoc, err := tx.Get(client.Collection("webtoons").Doc(req.WebtoonId))
+		if err != nil {
+			return fmt.Errorf("WEBTOON_NOT_FOUND")
+		}
+		
+		authorIdVal, _ := webtoonDoc.DataAt("authorId")
+		authorId := ""
+		if aId, ok := authorIdVal.(string); ok {
+			authorId = aId
+		}
+		
+		revenueShareVal, err := webtoonDoc.DataAt("revenueShare")
+		revenueShare := int64(73)
+		if err == nil {
+			switch r := revenueShareVal.(type) {
+			case int64: revenueShare = r
+			case float64: revenueShare = int64(r)
+			case int: revenueShare = int64(r)
+			}
+		}
+
 		coins, _ := doc.DataAt("coins")
 		currentCoins := int64(0)
 		switch c := coins.(type) {
@@ -366,6 +429,22 @@ func DonateToCreator(c *fiber.Ctx) error {
 			return err
 		}
 
+		// Calculate Shares
+		amountInt64 := int64(req.Amount)
+		partnerShare := (amountInt64 * revenueShare) / 100
+		platformShare := amountInt64 - partnerShare
+
+		// Update partner's revenueBalance
+		if authorId != "" {
+			partnerRef := client.Collection("users").Doc(authorId)
+			err = tx.Set(partnerRef, map[string]interface{}{
+				"revenueBalance": firestore.Increment(partnerShare),
+			}, firestore.MergeAll)
+			if err != nil {
+				return err
+			}
+		}
+
 		donationRef := client.Collection("donations").NewDoc()
 		userName, _ := doc.DataAt("displayName")
 		return tx.Set(donationRef, map[string]interface{}{
@@ -374,6 +453,10 @@ func DonateToCreator(c *fiber.Ctx) error {
 			"webtoonId":   req.WebtoonId,
 			"chapterId": req.ChapterId,
 			"amount":    req.Amount,
+			"partnerId": authorId,
+			"partnerShare": partnerShare,
+			"platformShare": platformShare,
+			"revenueShareRate": revenueShare,
 			"createdAt": firestore.ServerTimestamp,
 		})
 	})
@@ -512,12 +595,28 @@ func PurchaseShopItem(c *fiber.Ctx) error {
 
 		// 5. Record sale for partner
 		if realPrice > 0 {
+			partnerShare := (realPrice * 73) / 100
+			platformShare := realPrice - partnerShare
+
+			if req.PartnerId != "" {
+				partnerRef := client.Collection("users").Doc(req.PartnerId)
+				err = tx.Set(partnerRef, map[string]interface{}{
+					"revenueBalance": firestore.Increment(partnerShare),
+				}, firestore.MergeAll)
+				if err != nil {
+					return err
+				}
+			}
+
 			saleRef := client.Collection("shop_sales").NewDoc()
 			return tx.Set(saleRef, map[string]interface{}{
 				"itemId":    req.Id,
 				"partnerId": req.PartnerId,
 				"buyerId":   uid,
 				"price":     realPrice,
+				"partnerShare": partnerShare,
+				"platformShare": platformShare,
+				"revenueShareRate": 73,
 				"type":      req.Type,
 				"createdAt": firestore.ServerTimestamp,
 			})
