@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "readchill"
-  }
+  },
+  "targets": {
+    "readchill": {
+      "hosting": {
+        "frontend": [
+          "readchill"
+        ],
+        "admin": [
+          "readchill-admin"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

@@ -4,12 +4,13 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyA1-4fnlowdoF6IrFsSGCcnsnFHtwgzQ5o",
+  authDomain: "readchill.firebaseapp.com",
+  projectId: "readchill",
+  storageBucket: "readchill.firebasestorage.app",
+  messagingSenderId: "130626914375",
+  appId: "1:130626914375:web:79450f746ab35d49c40962",
+  measurementId: "G-QWBPVDK8BJ"
 };
 
 // Initialize Firebase only if it hasn't been initialized already

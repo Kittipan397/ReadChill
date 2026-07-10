@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { 
-  Camera, Pencil, Edit3, 
-  BookOpen, Clock, 
+import {
+  Camera, Pencil, Edit3,
+  BookOpen, Clock,
   Bookmark, MessageSquare, Palette, Shield, X, ZoomIn, ZoomOut
 } from 'lucide-react';
 import Link from 'next/link';
@@ -120,7 +120,7 @@ export default function ProfilePage() {
 
       setImageSrc(null); // Close modal
       setCropType(null);
-      window.location.reload(); 
+      window.location.reload();
     } catch (error) {
       console.error(error);
       alert(`เกิดข้อผิดพลาดในการอัปโหลดรูป${cropType === 'cover' ? 'ปก' : 'โปรไฟล์'}`);
@@ -172,7 +172,8 @@ export default function ProfilePage() {
         headers: { 'Authorization': `Bearer ${idToken}` }
       });
       const data = await res.json();
-      const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3000';
+      const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3002';
+      console.log("Navigating to Admin URL:", adminUrl);
       if (data.success && data.token) {
         window.open(`${adminUrl}/login?token=${data.token}`, '_blank');
       } else {
@@ -180,7 +181,8 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error navigating to Creator Studio:", error);
-      const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3000';
+      const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3002';
+      console.log("Navigating to Admin URL (fallback):", adminUrl);
       window.open(adminUrl, '_blank');
     }
   };
@@ -198,61 +200,61 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#050505] pb-20 transition-colors">
-      
+
       {/* Top subtle gradient background */}
       <div className="absolute top-0 left-0 right-0 h-[400px] bg-gradient-to-b from-blue-500/10 via-purple-500/5 to-transparent pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 relative z-10">
         <div className="flex flex-col lg:flex-row gap-8">
-          
+
           {/* Left Column (Profile Card & Navigation) */}
           <div className="w-full lg:w-80 shrink-0 flex flex-col gap-6">
-            
+
             {/* Main Profile Card */}
             <div className="bg-white/70 dark:bg-[#121212]/80 backdrop-blur-xl rounded-3xl border border-slate-200 dark:border-white/5 overflow-hidden shadow-2xl">
-              
+
               {/* Mini Cover */}
               <div className="h-32 relative bg-zinc-800 group overflow-hidden rounded-t-3xl">
-                <Image 
-                  src={coverUrl} 
-                  alt="Cover" 
-                  fill 
-                  className="object-cover opacity-80 group-hover:opacity-100 transition-opacity" 
+                <Image
+                  src={coverUrl}
+                  alt="Cover"
+                  fill
+                  className="object-cover opacity-80 group-hover:opacity-100 transition-opacity"
                   unoptimized
                 />
-                <button 
+                <button
                   onClick={() => coverInputRef.current?.click()}
                   className="absolute top-3 right-3 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white p-2 rounded-full transition-all border border-white/10"
                 >
                   <Camera size={16} />
                 </button>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  ref={coverInputRef} 
-                  onChange={(e) => handleFileChange(e, 'cover')} 
-                  className="hidden" 
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={coverInputRef}
+                  onChange={(e) => handleFileChange(e, 'cover')}
+                  className="hidden"
                 />
               </div>
 
               {/* Avatar & Info */}
               <div className="px-6 pb-6 relative flex flex-col items-center text-center">
-                
+
                 {/* Avatar */}
                 <div className="relative -mt-16 w-32 h-32 z-10 group cursor-pointer mb-4" onClick={() => avatarInputRef.current?.click()}>
                   <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20 flex items-center justify-center">
                     <Camera size={24} className="text-white" />
                   </div>
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    ref={avatarInputRef} 
-                    onChange={(e) => handleFileChange(e, 'avatar')} 
-                    className="hidden" 
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={avatarInputRef}
+                    onChange={(e) => handleFileChange(e, 'avatar')}
+                    className="hidden"
                   />
-                  <Image 
-                    src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}&background=1a90ff&color=fff`} 
-                    alt="Profile" 
+                  <Image
+                    src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}&background=1a90ff&color=fff`}
+                    alt="Profile"
                     fill
                     className="rounded-full border-4 border-white dark:border-[#121212] object-cover z-0 bg-white dark:bg-[#121212] shadow-lg"
                     unoptimized
@@ -271,7 +273,7 @@ export default function ProfilePage() {
                       <Pencil size={14} />
                     </button>
                   </h1>
-                  
+
                   <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium mb-4 flex items-center gap-2">
                     @{user.email?.split('@')[0]}
                     <span className="w-1 h-1 bg-slate-300 dark:bg-zinc-700 rounded-full"></span>
@@ -310,7 +312,7 @@ export default function ProfilePage() {
                     ) : (
                       <p className="text-slate-500 dark:text-zinc-500 text-sm italic">ยังไม่มีข้อมูลแนะนำตัว...</p>
                     )}
-                    
+
                     {/* Social Links */}
                     {(userData?.facebook || userData?.instagram) && (
                       <div className="mt-4 flex flex-col gap-2">
@@ -337,7 +339,7 @@ export default function ProfilePage() {
                   {(userData?.role === 'artist' || userData?.role === 'admin' || userData?.role === 'partner') && (
                     <button onClick={handleGoToCreatorStudio} className="w-full mt-3 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all active:scale-95">
                       <Palette size={18} />
-                      จัดการผลงาน (Creator Studio)
+                      (Creator Studio)
                     </button>
                   )}
                 </div>
@@ -354,11 +356,10 @@ export default function ProfilePage() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
-                        isActive 
-                          ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 shadow-sm' 
+                      className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${isActive
+                          ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 shadow-sm'
                           : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white'
-                      }`}
+                        }`}
                     >
                       <Icon size={18} className={isActive ? 'text-blue-600 dark:text-blue-400' : ''} />
                       {tab.label}
@@ -367,7 +368,7 @@ export default function ProfilePage() {
                 })}
               </div>
             </div>
-            
+
           </div>
 
           {/* Right Column (Main Content Area) */}
@@ -387,8 +388,8 @@ export default function ProfilePage() {
                     {myWorks
                       .filter(work => activeTab === 'artworks' ? true : work.type === activeTab.replace('s', '') || (activeTab === 'webtoons' && (work.type === 'comic' || work.type === 'webtoon')) || (activeTab === 'novels' && work.type === 'novel') || (activeTab === 'arts' && work.type === 'art'))
                       .map((work) => (
-                      <WebtoonCard key={work.id} {...work} />
-                    ))}
+                        <WebtoonCard key={work.id} {...work} />
+                      ))}
                     {myWorks.filter(work => activeTab === 'artworks' ? true : work.type === activeTab.replace('s', '') || (activeTab === 'webtoons' && (work.type === 'comic' || work.type === 'webtoon')) || (activeTab === 'novels' && work.type === 'novel') || (activeTab === 'arts' && work.type === 'art')).length === 0 && (
                       <div className="col-span-full py-20 text-center flex flex-col items-center">
                         <BookOpen size={48} className="text-slate-300 dark:text-zinc-700 mb-4" />
@@ -422,11 +423,11 @@ export default function ProfilePage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm" onClick={() => !isUploading && setImageSrc(null)}></div>
           <div className="relative w-full max-w-2xl bg-white dark:bg-[#18181b] rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 z-10 flex flex-col">
-            
+
             <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-white/10">
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">ครอปรูป{cropType === 'cover' ? 'หน้าปก' : 'โปรไฟล์'}</h3>
-              <button 
-                onClick={() => setImageSrc(null)} 
+              <button
+                onClick={() => setImageSrc(null)}
                 disabled={isUploading}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
               >
@@ -436,13 +437,13 @@ export default function ProfilePage() {
 
             <div className="p-6">
               <p className="text-slate-500 dark:text-zinc-400 text-sm mb-4">ลากเพื่อเลื่อนตำแหน่ง ซูมเพื่อเลือกเฉพาะส่วนที่ต้องการ</p>
-              
+
               <div className={`relative w-full bg-slate-100 dark:bg-black overflow-hidden mb-6 ${cropType === 'cover' ? 'h-64 sm:h-80 rounded-2xl' : 'h-80 sm:h-96 rounded-2xl'}`}>
                 <Cropper
                   image={imageSrc}
                   crop={crop}
                   zoom={zoom}
-                  aspect={cropType === 'cover' ? 3 / 1 : 1} 
+                  aspect={cropType === 'cover' ? 3 / 1 : 1}
                   cropShape={cropType === 'cover' ? 'rect' : 'round'}
                   onCropChange={setCrop}
                   onCropComplete={onCropComplete}
@@ -467,14 +468,14 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex justify-between gap-4">
-                <button 
+                <button
                   onClick={() => setImageSrc(null)}
                   disabled={isUploading}
                   className="flex-1 py-3 text-slate-600 dark:text-zinc-300 font-medium bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-xl transition-colors disabled:opacity-50"
                 >
                   ยกเลิก
                 </button>
-                <button 
+                <button
                   onClick={handleUploadImage}
                   disabled={isUploading}
                   className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-50"
@@ -494,20 +495,20 @@ export default function ProfilePage() {
           <div className="relative w-full max-w-lg bg-white dark:bg-[#18181b] rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 z-10 flex flex-col">
             <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-white/10">
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">แก้ไขโปรไฟล์</h3>
-              <button 
-                onClick={() => setIsEditProfileOpen(false)} 
+              <button
+                onClick={() => setIsEditProfileOpen(false)}
                 disabled={isSavingProfile}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
               >
                 <X size={24} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSaveProfile} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">นามปากกา (Display Name)</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={editDisplayName}
                   onChange={(e) => setEditDisplayName(e.target.value)}
                   placeholder="ชื่อที่ใช้แสดงผล..."
@@ -518,7 +519,7 @@ export default function ProfilePage() {
 
               <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">แนะนำตัว (Bio)</label>
-                <textarea 
+                <textarea
                   rows={4}
                   value={editBio}
                   onChange={(e) => setEditBio(e.target.value)}
@@ -526,11 +527,11 @@ export default function ProfilePage() {
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none resize-none"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">ลิงก์ Facebook (ถ้ามี)</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={editFacebook}
                   onChange={(e) => setEditFacebook(e.target.value)}
                   placeholder="https://facebook.com/..."
@@ -540,8 +541,8 @@ export default function ProfilePage() {
 
               <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Instagram (ถ้ามี)</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={editInstagram}
                   onChange={(e) => setEditInstagram(e.target.value)}
                   placeholder="@username หรือลิงก์ IG"
@@ -550,7 +551,7 @@ export default function ProfilePage() {
               </div>
 
               <div className="pt-4 flex justify-end gap-3">
-                <button 
+                <button
                   type="button"
                   onClick={() => setIsEditProfileOpen(false)}
                   disabled={isSavingProfile}
@@ -558,7 +559,7 @@ export default function ProfilePage() {
                 >
                   ยกเลิก
                 </button>
-                <button 
+                <button
                   type="submit"
                   disabled={isSavingProfile}
                   className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-50 flex items-center gap-2"
