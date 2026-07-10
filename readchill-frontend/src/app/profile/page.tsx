@@ -172,14 +172,16 @@ export default function ProfilePage() {
         headers: { 'Authorization': `Bearer ${idToken}` }
       });
       const data = await res.json();
+      const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3000';
       if (data.success && data.token) {
-        window.open(`http://localhost:3001/login?token=${data.token}`, '_blank');
+        window.open(`${adminUrl}/login?token=${data.token}`, '_blank');
       } else {
-        window.open('http://localhost:3001', '_blank');
+        window.open(adminUrl, '_blank');
       }
     } catch (error) {
       console.error("Error navigating to Creator Studio:", error);
-      window.open('http://localhost:3001', '_blank');
+      const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3000';
+      window.open(adminUrl, '_blank');
     }
   };
 
