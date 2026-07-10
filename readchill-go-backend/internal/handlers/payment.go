@@ -155,11 +155,10 @@ func SubmitSlip(c *fiber.Ctx) error {
 	// 5. Firestore Transaction
 	ctx := context.Background()
 	err = client.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
-		// Check Duplicate
-		iter := client.Collection("payments").Where("transRef", "==", transRef).Documents(ctx)
-		defer iter.Stop()
-		_, err := iter.Next()
-		if err != iterator.Done {
+		// Check Duplicate inside the transaction lock
+		paymentRef := client.Collection("payments").Doc(transRef)
+		paymentDoc, err := tx.Get(paymentRef)
+		if err == nil && paymentDoc.Exists() {
 			// Found a duplicate
 			return fmt.Errorf("สลิปนี้ถูกใช้งานไปแล้ว ไม่สามารถใช้ซ้ำได้")
 		}
@@ -173,9 +172,8 @@ func SubmitSlip(c *fiber.Ctx) error {
 			return err
 		}
 
-		// Create Payment Document
-		newPaymentRef := client.Collection("payments").NewDoc()
-		return tx.Set(newPaymentRef, map[string]interface{}{
+		// Create Payment Document using transRef as ID
+		return tx.Set(paymentRef, map[string]interface{}{
 			"transRef":   transRef,
 			"userId":     uid,
 			"amount":     slipData.Amount,

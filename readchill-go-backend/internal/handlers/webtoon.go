@@ -97,15 +97,26 @@ func GetWebtoonDetail(c *fiber.Ctx) error {
 	webtoonData := doc.Data()
 	webtoonData["id"] = doc.Ref.ID
 
-	// Increment view count asynchronously
-	go func(webtoonId string) {
+	ip := c.IP()
+	// Increment view count asynchronously (with Rate Limiting)
+	go func(webtoonId string, userIp string) {
+		if config.RedisClient != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			key := fmt.Sprintf("rate:view:%s:%s", webtoonId, userIp)
+			ok, _ := config.RedisClient.SetNX(ctx, key, "1", 5*time.Minute).Result()
+			if !ok {
+				return // Already viewed recently by this IP, don't increment Firestore
+			}
+		}
+
 		client.Collection("webtoons").Doc(webtoonId).Update(context.Background(), []firestore.Update{
 			{Path: "views", Value: firestore.Increment(1)},
 		})
-	}(id)
+	}(id, ip)
 
-	// Fetch chapters
-	iter := client.Collection("webtoons").Doc(id).Collection("chapters").OrderBy("number", 1).Documents(context.Background()) // 1 = Ascending
+	// Fetch chapters (Limited to 1000 to prevent DoS/OOM)
+	iter := client.Collection("webtoons").Doc(id).Collection("chapters").OrderBy("number", 1).Limit(1000).Documents(context.Background()) // 1 = Ascending
 	var chapters []map[string]interface{}
 	
 	for {
@@ -141,12 +152,23 @@ func GetChapter(c *fiber.Ctx) error {
 	data := doc.Data()
 	data["id"] = doc.Ref.ID
 
-	// Increment view count asynchronously
-	go func(webtoonId string) {
+	ip := c.IP()
+	// Increment view count asynchronously (with Rate Limiting)
+	go func(webtoonId string, userIp string) {
+		if config.RedisClient != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+			key := fmt.Sprintf("rate:view:%s:%s", webtoonId, userIp)
+			ok, _ := config.RedisClient.SetNX(ctx, key, "1", 5*time.Minute).Result()
+			if !ok {
+				return // Already viewed recently by this IP, don't increment Firestore
+			}
+		}
+
 		client.Collection("webtoons").Doc(webtoonId).Update(context.Background(), []firestore.Update{
 			{Path: "views", Value: firestore.Increment(1)},
 		})
-	}(id)
+	}(id, ip)
 
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
