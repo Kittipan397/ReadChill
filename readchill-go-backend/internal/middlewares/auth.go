@@ -10,6 +10,11 @@ import (
 
 // VerifyToken verifies the Firebase ID token
 func VerifyToken(c *fiber.Ctx) error {
+	// Allow preflight requests to pass through without verifying token
+	if c.Method() == "OPTIONS" {
+		return c.Next()
+	}
+
 	authHeader := c.Get("Authorization")
 	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 		return c.Status(401).JSON(fiber.Map{"error": "Unauthorized: No token provided"})

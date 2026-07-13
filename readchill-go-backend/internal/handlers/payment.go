@@ -7,14 +7,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/gofiber/fiber/v2"
 	"github.com/kittipan/readchill-backend/internal/config"
-	"google.golang.org/api/iterator"
 )
 
 type SubmitSlipRequest struct {
@@ -59,10 +57,7 @@ func SubmitSlip(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Missing required fields"})
 	}
 
-	apiKey := os.Getenv("SLIPOK_API_KEY")
-	if apiKey == "" {
-		return c.Status(500).JSON(fiber.Map{"success": false, "message": "Server configuration error: missing payment API key"})
-	}
+	apiKey := "SLIPOKPHXCCC8"
 	apiUrl := "https://api.slipok.com/api/line/apikey/69617"
 
 	// 1. Verify with SlipOK API

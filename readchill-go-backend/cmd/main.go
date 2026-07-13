@@ -31,8 +31,10 @@ func main() {
 	app.Use(recover.New())
 	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: config.GetEnv("ALLOWED_ORIGINS", "*"),
-		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowOrigins:     config.GetEnv("ALLOWED_ORIGINS", "https://read-chill.vercel.app"),
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowCredentials: true,
 	}))
 
 	// Health check route
