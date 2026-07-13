@@ -9,7 +9,8 @@ import HeroSection from '@/components/home/HeroSection';
 
 async function getWebtoons(page: number, limit: number, type: string) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/webtoons?page=${page}&limit=${limit}&type=${type}`, { cache: 'no-store' });
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'https://readchill-574138149891.asia-southeast1.run.app';
+    const res = await fetch(`${API_BASE}/api/v1/webtoons?page=${page}&limit=${limit}&type=${type}`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch data');
     const json = await res.json();
     return json.data || [];
