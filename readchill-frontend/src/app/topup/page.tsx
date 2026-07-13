@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/context/LanguageContext';
 
 export default function TopupPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const { t } = useLanguage();
   const [coins, setCoins] = useState<number>(0);
@@ -38,6 +38,7 @@ export default function TopupPage() {
   const packages = [
     { baht: 20, coins: 20, bonus: 0 },
     { baht: 50, coins: 50, bonus: 0 },
+    { baht: 50, coins: 50, bonus: 0 },
     { baht: 100, coins: 100, bonus: 4 },
     { baht: 300, coins: 300, bonus: 18 },
     { baht: 500, coins: 500, bonus: 40 },
@@ -45,17 +46,20 @@ export default function TopupPage() {
   ];
 
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       router.push('/login');
       return;
     }
-    const unsub = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
-      if (docSnap.exists()) {
-        setCoins(docSnap.data().coins || 0);
-      }
-    });
-    return () => unsub();
-  }, [user, router]);
+    
+    if (user) {
+      const unsub = onSnapshot(doc(db, 'users', user.uid), (docSnap) => {
+        if (docSnap.exists()) {
+          setCoins(docSnap.data().coins || 0);
+        }
+      });
+      return () => unsub();
+    }
+  }, [user, loading, router]);
 
   useEffect(() => {
     if (activeTab === 'history' && user) {

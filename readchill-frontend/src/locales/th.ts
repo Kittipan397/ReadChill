@@ -229,7 +229,18 @@ export const th = {
     donate_success: "ส่งเหรียญสนับสนุนสำเร็จ! ขอบคุณที่เป็นกำลังใจให้นักวาดครับ",
     donate_error: "เกิดข้อผิดพลาดในการสนับสนุน",
     donate_not_enough: "เหรียญไม่พอ กรุณาเติมเหรียญ",
-    donate_login: "กรุณาเข้าสู่ระบบก่อนสนับสนุนนักวาด"
+    donate_login: "กรุณาเข้าสู่ระบบก่อนสนับสนุนนักวาด",
+    // New settings translations
+    theme: "ธีม",
+    theme_light: "สว่าง",
+    theme_dark: "มืด",
+    theme_sepia: "เหลืองอ่อน",
+    font_size: "ขนาดตัวอักษร",
+    brightness: "ความสว่าง",
+    page_mode: "โหมดแสดงผล",
+    page_mode_scroll: "เลื่อนต่อเนื่อง",
+    page_mode_single: "หน้าเดียว",
+    fullscreen: "เต็มหน้าจอ"
   },
   
   // Comments

@@ -5,7 +5,6 @@ import { ArrowRight, Flame, BookOpen, Palette, Eye } from 'lucide-react';
 import WebtoonCard from '@/components/ui/WebtoonCard';
 import Pagination from '@/components/ui/Pagination';
 import T from '@/components/ui/T';
-import HeroSection from '@/components/home/HeroSection';
 
 async function getWebtoons(page: number, limit: number, type: string) {
   try {
@@ -31,8 +30,6 @@ export default async function Home({ searchParams }: { searchParams: { page?: st
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-white transition-colors">
-      {/* Hero Section */}
-      <HeroSection />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

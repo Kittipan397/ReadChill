@@ -4,7 +4,6 @@ import { ArrowRight, BookOpen, Palette } from 'lucide-react';
 import WebtoonCard from '@/components/ui/WebtoonCard';
 import Pagination from '@/components/ui/Pagination';
 import T from '@/components/ui/T';
-import HeroSection from '@/components/home/HeroSection';
 
 async function getWebtoons(page: number, limit: number, type: string) {
   try {
@@ -22,13 +21,12 @@ export default async function NovelPage({ searchParams }: { searchParams: { page
   const ITEMS_PER_PAGE = 24;
   const params = await searchParams;
   const currentPage = parseInt(params.page || '1');
-  
+
   const displayWebtoons = await getWebtoons(currentPage, ITEMS_PER_PAGE, "novel");
   const hasNextPage = displayWebtoons.length === ITEMS_PER_PAGE;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-white transition-colors">
-      <HeroSection />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -41,10 +39,10 @@ export default async function NovelPage({ searchParams }: { searchParams: { page
                 ทั้งหมด <ArrowRight size={12} />
               </Link>
             </div>
-            
+
             <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-zinc-800">
               <Link href="/" className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">
-                <BookOpen size={18} /> คอมมิก
+                <BookOpen size={18} /> เว็บตูน
               </Link>
               <Link href="/novel" className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors bg-green-600 text-white shadow-sm">
                 <BookOpen size={18} /> นิยาย
@@ -64,7 +62,7 @@ export default async function NovelPage({ searchParams }: { searchParams: { page
               <p className="text-slate-500 dark:text-zinc-500 col-span-full text-center py-10"><T path="home.no_data" /></p>
             )}
           </div>
-          
+
           <Pagination hasNextPage={hasNextPage} />
         </div>
       </main>

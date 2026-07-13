@@ -4,6 +4,7 @@ import { useState, useEffect, use } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Settings, List, MessageSquare, Heart, Loader2 } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import CommentSection from '@/components/comments/CommentSection';
 import { useAntiCopy } from '@/hooks/useAntiCopy';
 import { useAuth } from '@/context/AuthContext';
@@ -147,7 +148,10 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string, c
               <div className="px-6 py-8 md:px-12 md:py-16 text-slate-800 dark:text-zinc-200">
                 <div 
                   className="prose prose-lg md:prose-xl dark:prose-invert max-w-none text-xl leading-loose md:text-2xl md:leading-loose whitespace-pre-wrap font-serif"
-                  dangerouslySetInnerHTML={{ __html: chapterContent }}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(chapterContent, {
+                    ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'u', 'h1', 'h2', 'h3', 'blockquote', 'ul', 'ol', 'li', 'span'],
+                    ALLOWED_ATTR: ['class', 'style']
+                  }) }}
                 />
               </div>
             ) : chapterImages.length > 0 ? chapterImages.map((src, idx) => (

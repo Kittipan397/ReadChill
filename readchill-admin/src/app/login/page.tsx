@@ -9,22 +9,26 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Check for custom token for Single Sign-On
-    const params = new URLSearchParams(window.location.search);
-    const customToken = params.get("token");
-    
-    if (customToken && !user) {
-      import("firebase/auth").then(({ signInWithCustomToken }) => {
-        import("@/lib/firebase").then(({ auth }) => {
-          signInWithCustomToken(auth, customToken).then(() => {
-            // Clean up the URL
-            window.history.replaceState({}, document.title, window.location.pathname);
-            router.push("/dashboard");
-          }).catch(console.error);
+    // Listen for custom token via postMessage for secure Single Sign-On
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'AUTH_TOKEN' && event.data?.token && !user) {
+        import("firebase/auth").then(({ signInWithCustomToken }) => {
+          import("@/lib/firebase").then(({ auth }) => {
+            signInWithCustomToken(auth, event.data.token).then(() => {
+              // Send acknowledgment back
+              if (event.source) {
+                (event.source as Window).postMessage({ type: 'AUTH_SUCCESS' }, event.origin);
+              }
+              router.push("/dashboard");
+            }).catch(console.error);
+          });
         });
-      });
-      return;
-    }
+      }
+    };
+    
+    window.addEventListener("message", handleMessage);
+    
+    return () => window.removeEventListener("message", handleMessage);
 
     if (!loading && user && (role === "admin" || role === "partner")) {
       router.push("/dashboard");

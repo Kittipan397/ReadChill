@@ -4,7 +4,6 @@ import Image from 'next/image';
 import { ArrowRight, BookOpen, Palette, Eye } from 'lucide-react';
 import Pagination from '@/components/ui/Pagination';
 import T from '@/components/ui/T';
-import HeroSection from '@/components/home/HeroSection';
 
 async function getWebtoons(page: number, limit: number, type: string) {
   try {
@@ -22,13 +21,12 @@ export default async function ArtPage({ searchParams }: { searchParams: { page?:
   const ITEMS_PER_PAGE = 24;
   const params = await searchParams;
   const currentPage = parseInt(params.page || '1');
-  
+
   const displayWebtoons = await getWebtoons(currentPage, ITEMS_PER_PAGE, "art");
   const hasNextPage = displayWebtoons.length === ITEMS_PER_PAGE;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-white transition-colors">
-      <HeroSection />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -41,10 +39,10 @@ export default async function ArtPage({ searchParams }: { searchParams: { page?:
                 ทั้งหมด <ArrowRight size={12} />
               </Link>
             </div>
-            
+
             <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-zinc-800">
               <Link href="/" className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">
-                <BookOpen size={18} /> คอมมิก
+                <BookOpen size={18} /> เว็บตูน
               </Link>
               <Link href="/novel" className="flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">
                 <BookOpen size={18} /> นิยาย
@@ -59,18 +57,18 @@ export default async function ArtPage({ searchParams }: { searchParams: { page?:
             {displayWebtoons.length > 0 ? (
               displayWebtoons.map((art: any) => (
                 <Link href={`/art/${art.id}`} key={art.id} className="block group relative rounded-2xl overflow-hidden bg-slate-200 dark:bg-zinc-800 break-inside-avoid shadow-sm hover:shadow-xl transition-all hover:-translate-y-1">
-                  <Image 
-                    src={art.coverUrl} 
-                    alt={art.title} 
-                    width={500} 
-                    height={500} 
-                    className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105" 
-                    unoptimized 
+                  <Image
+                    src={art.coverUrl}
+                    alt={art.title}
+                    width={500}
+                    height={500}
+                    className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+                    unoptimized
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4">
                     <h3 className="text-white font-bold text-sm md:text-base line-clamp-2">{art.title}</h3>
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-zinc-300 text-xs flex items-center gap-1"><Eye size={12}/> {art.views || 0}</span>
+                      <span className="text-zinc-300 text-xs flex items-center gap-1"><Eye size={12} /> {art.views || 0}</span>
                       {art.defaultPrice > 0 ? (
                         <span className="text-yellow-400 font-bold text-xs bg-yellow-400/20 px-2 py-1 rounded-full backdrop-blur-md">🪙 {art.defaultPrice}</span>
                       ) : (
@@ -84,7 +82,7 @@ export default async function ArtPage({ searchParams }: { searchParams: { page?:
               <p className="text-slate-500 dark:text-zinc-500 col-span-full text-center py-10 w-full"><T path="home.no_data" /></p>
             )}
           </div>
-          
+
           <Pagination hasNextPage={hasNextPage} />
         </div>
       </main>

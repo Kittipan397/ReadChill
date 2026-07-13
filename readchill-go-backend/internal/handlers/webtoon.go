@@ -173,71 +173,67 @@ func GetChapter(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"success": true, "data": data})
 }
 
-// ToggleSaveWebtoon adds or removes a webtoon from the user's savedWebtoons list
+// ToggleSaveWebtoon adds or removes a webtoon from the user's savedWebtoons list atomically.
 func ToggleSaveWebtoon(c *fiber.Ctx) error {
 	uid := c.Locals("uid").(string)
 	webtoonId := c.Params("id")
-
 	client := config.FirestoreClient
-
 	userRef := client.Collection("users").Doc(uid)
-	docSnap, err := userRef.Get(context.Background())
-	
-	if err != nil && err.Error() != "rpc error: code = NotFound desc = document not found" {
-		// If it's a real error other than not found
-		return c.Status(500).JSON(fiber.Map{"success": false, "error": "Failed to read user data"})
-	}
 
-	var savedWebtoons []interface{}
-	if docSnap.Exists() {
-		data := docSnap.Data()
-		if sm, ok := data["savedWebtoons"].([]interface{}); ok {
-			savedWebtoons = sm
+	var isSaved bool
+	err := client.RunTransaction(context.Background(), func(ctx context.Context, tx *firestore.Transaction) error {
+		doc, err := tx.Get(userRef)
+		if err != nil && err.Error() != "rpc error: code = NotFound desc = document not found" {
+			return err
 		}
-	} else {
-		// Create the document if it doesn't exist
-		_, _ = userRef.Set(context.Background(), map[string]interface{}{
-			"savedWebtoons": []interface{}{},
-		})
-	}
 
-	// Check if already saved
-	isSaved := false
-	var updatedSaved []interface{}
-	for _, id := range savedWebtoons {
-		if id.(string) == webtoonId {
-			isSaved = true
-		} else {
-			updatedSaved = append(updatedSaved, id)
-		}
-	}
-
-	if isSaved {
-		// Remove it
-		_, err = userRef.Update(context.Background(), []firestore.Update{
-			{Path: "savedWebtoons", Value: updatedSaved},
-		})
-		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"success": false, "error": "Failed to unsave webtoon"})
-		}
-		return c.JSON(fiber.Map{"success": true, "message": "Webtoon unsaved", "isSaved": false})
-	} else {
-		// Add it
-		updatedSaved = append(updatedSaved, webtoonId)
-		_, err = userRef.Update(context.Background(), []firestore.Update{
-			{Path: "savedWebtoons", Value: updatedSaved},
-		})
-		if err != nil {
-			// If Update fails because doc is newly created without the field properly initialized by Set, use Set with Merge
-			_, err = userRef.Set(context.Background(), map[string]interface{}{
-				"savedWebtoons": updatedSaved,
-			}, firestore.MergeAll)
-			if err != nil {
-				return c.Status(500).JSON(fiber.Map{"success": false, "error": "Failed to save webtoon"})
+		var savedWebtoons []interface{}
+		if doc.Exists() {
+			data := doc.Data()
+			if sm, ok := data["savedWebtoons"].([]interface{}); ok {
+				savedWebtoons = sm
 			}
 		}
-		return c.JSON(fiber.Map{"success": true, "message": "Webtoon saved", "isSaved": true})
+
+		// Check if already saved
+		currentlySaved := false
+		for _, id := range savedWebtoons {
+			if idStr, ok := id.(string); ok && idStr == webtoonId {
+				currentlySaved = true
+				break
+			}
+		}
+
+		var update firestore.Update
+		if currentlySaved {
+			// Remove it
+			update = firestore.Update{
+				Path:  "savedWebtoons",
+				Value: firestore.ArrayRemove(webtoonId),
+			}
+			isSaved = false
+		} else {
+			// Add it
+			update = firestore.Update{
+				Path:  "savedWebtoons",
+				Value: firestore.ArrayUnion(webtoonId),
+			}
+			isSaved = true
+		}
+
+		return tx.Update(userRef, []firestore.Update{update})
+	})
+
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "error": "Failed to update saved webtoons: " + err.Error()})
 	}
+
+	message := "Webtoon saved"
+	if !isSaved {
+		message = "Webtoon unsaved"
+	}
+
+	return c.JSON(fiber.Map{"success": true, "message": message, "isSaved": isSaved})
 }
 
 // DownloadArt returns the original high-res image URL if the user has purchased it or if it is free.
@@ -295,8 +291,10 @@ func DownloadArt(c *fiber.Ctx) error {
 
 	originalUrl, ok := artData["originalUrl"].(string)
 	if !ok || originalUrl == "" {
-		// Fallback to coverUrl if original is not uploaded yet
-		originalUrl, _ = artData["coverUrl"].(string)
+		return c.Status(404).JSON(fiber.Map{
+			"success": false, 
+			"error": "ภาพความละเอียดสูงยังไม่พร้อมใช้งานในขณะนี้",
+		})
 	}
 
 	return c.JSON(fiber.Map{

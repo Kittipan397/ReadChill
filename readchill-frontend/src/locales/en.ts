@@ -231,7 +231,18 @@ export const en: Translations = {
     donate_success: "Donation sent successfully! Thank you for supporting the artist.",
     donate_error: "Error sending donation",
     donate_not_enough: "Not enough coins, please top up.",
-    donate_login: "Please login to support the artist"
+    donate_login: "Please login to support the artist",
+    // New settings translations
+    theme: "Theme",
+    theme_light: "Light",
+    theme_dark: "Dark",
+    theme_sepia: "Sepia",
+    font_size: "Font Size",
+    brightness: "Brightness",
+    page_mode: "Page Mode",
+    page_mode_scroll: "Scroll",
+    page_mode_single: "Single Page",
+    fullscreen: "Fullscreen"
   },
   
   // Comments

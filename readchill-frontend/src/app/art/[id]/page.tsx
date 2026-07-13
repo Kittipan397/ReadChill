@@ -72,7 +72,7 @@ export default function ArtDetailPage() {
       const data = await res.json();
       if (data.success) {
         alert("ซื้อภาพวาดสำเร็จ! คุณสามารถดาวน์โหลดภาพต้นฉบับได้แล้ว");
-        window.location.reload();
+        router.refresh();
       } else {
         alert(data.message || "เกิดข้อผิดพลาดในการซื้อ");
       }
@@ -98,9 +98,22 @@ export default function ArtDetailPage() {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       const data = await res.json();
+
       if (data.success && data.data?.downloadUrl) {
-        // Open the original URL in a new tab to view/download
-        window.open(data.data.downloadUrl, '_blank');
+        // Force download by creating a temporary anchor tag
+        const link = document.createElement('a');
+        link.href = data.data.downloadUrl;
+        
+        // Extract filename from URL or create a generic one
+        const filename = data.data.downloadUrl.split('/').pop()?.split('?')[0] || `ReadChill_Art_${id}.jpg`;
+        link.setAttribute('download', filename);
+        
+        document.body.appendChild(link);
+        link.click();
+        
+        // Clean up and remove the link
+        link.parentNode?.removeChild(link);
+
       } else {
         alert(data.error || "เกิดข้อผิดพลาดในการดาวน์โหลดภาพ");
       }

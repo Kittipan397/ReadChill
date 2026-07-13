@@ -80,6 +80,21 @@ export default function ProfilePage() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'cover' | 'avatar') => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
+      
+      const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+      const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+      
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        alert('กรุณาอัปโหลดไฟล์รูปภาพเท่านั้น (JPG, PNG, WEBP, GIF)');
+        e.target.value = '';
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        alert('ขนาดไฟล์ต้องไม่เกิน 5MB');
+        e.target.value = '';
+        return;
+      }
+
       let imageDataUrl = await readFile(file);
       setImageSrc(imageDataUrl as string);
       setCropType(type);
@@ -175,7 +190,28 @@ export default function ProfilePage() {
       const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3002';
       console.log("Navigating to Admin URL:", adminUrl);
       if (data.success && data.token) {
-        window.open(`${adminUrl}/login?token=${data.token}`, '_blank');
+        const newWin = window.open(`${adminUrl}/login`, '_blank');
+        if (newWin) {
+          // Send token after window has time to initialize message listener
+          const interval = setInterval(() => {
+            newWin.postMessage(
+              { type: 'AUTH_TOKEN', token: data.token },
+              adminUrl
+            );
+          }, 500);
+          
+          // Clear interval if admin confirms receipt
+          const handleAck = (event: MessageEvent) => {
+            if (event.origin === adminUrl && event.data?.type === 'AUTH_SUCCESS') {
+              clearInterval(interval);
+              window.removeEventListener("message", handleAck);
+            }
+          };
+          window.addEventListener("message", handleAck);
+          
+          // Fallback to clear after 10s
+          setTimeout(() => clearInterval(interval), 10000);
+        }
       } else {
         window.open(adminUrl, '_blank');
       }
